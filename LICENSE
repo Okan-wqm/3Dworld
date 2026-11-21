@@ -1,5 +1,5 @@
 3Dworld Evaluation License (Non-Commercial, Testing Only)
-Version 1.0
+Version 1.1
 
 Copyright (c) 2026 The 3Dworld Authors. All rights reserved.
 
@@ -11,33 +11,46 @@ EXPRESSLY PROHIBITED WITHOUT PRIOR WRITTEN PERMISSION FROM THE LICENSOR.
 
 1. Definitions
 
-   "Software" means the source code, object code, documentation, model
-   configurations, scripts and any other material in this repository that
-   is authored by the Licensor, including any modifications or derivative
-   works of it.
+   "License" means this 3Dworld Evaluation License.
 
-   "Licensor" means The 3Dworld Authors, the copyright holders of the
+   "Licensor" means The 3Dworld Authors, who hold the copyright in the
    Software.
 
+   "Software" means the source code, object code, documentation, model
+   configurations, scripts and any other material in this repository that
+   is authored by the Licensor, including modifications and derivative works
+   of that material. "Software" does not include Third-Party Components.
+
+   "Third-Party Components" means any model, library, code, data or other
+   material that is owned by a third party and is included in, distributed
+   with, downloaded by or used by the Software, whether or not it has been
+   modified.
+
    "You" means any individual or legal entity exercising permissions under
-   this License.
+   this License. For a legal entity, "You" includes its employees and
+   contractors acting on its behalf.
+
+   "Testing and Evaluation" means using the Software internally to test,
+   assess and demonstrate its functionality, without making it or its
+   outputs available to third parties and without using it in production
+   operations. Internal testing and evaluation by a business is permitted
+   under this License as long as it is not part of production operations.
 
    "Commercial Use" means any use intended for or directed toward commercial
    advantage or monetary compensation, whether direct or indirect,
    including but not limited to: selling, licensing or renting the Software;
    offering the Software, or any functionality of it, as a hosted service,
-   SaaS, API or platform to third parties; using the Software in production
-   operations of a business; integrating the Software into a commercial
-   product or service; and using content, 3D assets, videos or data
-   generated with the Software in any commercial product, service or
+   SaaS, API or platform to third parties; using the Software in the
+   production operations of a business; integrating the Software into a
+   commercial product or service; and using content, 3D assets, videos or
+   data generated with the Software in any commercial product, service or
    advertisement.
 
 2. Grant of License
 
    Subject to the terms of this License, the Licensor grants You a limited,
    non-exclusive, non-transferable, non-sublicensable and revocable license
-   to use, copy and modify the Software solely for internal testing,
-   evaluation and non-commercial research purposes.
+   to use, copy and modify the Software solely for Testing and Evaluation.
 
 3. Restrictions
 
@@ -46,46 +59,66 @@ EXPRESSLY PROHIBITED WITHOUT PRIOR WRITTEN PERMISSION FROM THE LICENSOR.
    a) use the Software, or any output generated with it, for any
       Commercial Use;
    b) distribute, publish, sublicense, sell or otherwise make the Software
-      or any derivative work of it available to any third party;
+      or any derivative work of it available to any third party, other than
+      Your own employees and contractors acting on Your behalf for Testing
+      and Evaluation;
    c) remove, alter or obscure any copyright, license or attribution
-      notice contained in the Software.
+      notice contained in the Software or in any Third-Party Component.
 
 4. Third-Party Components
 
-   The Software uses or depends on third-party models, libraries and
-   services that are licensed separately by their respective owners. Those
-   components are governed exclusively by their own license terms (see
-   LICENSES.md), and nothing in this License limits the rights granted to
-   You under those licenses or grants You any rights to them. You are
-   responsible for complying with the terms of every third-party component.
+   a) Third-Party Components are licensed by their respective owners under
+      their own terms, as recorded in LICENSES.md and THIRD_PARTY_NOTICES.md
+      in this repository. This License does not apply to them, even if they
+      have been modified, and does not grant You any rights to them.
+   b) Nothing in this License limits the rights You have under the license
+      of any Third-Party Component. Files licensed under the Mozilla Public
+      License 2.0 remain under that license, including any modifications to
+      them.
+   c) You are responsible for complying with the license terms, acceptable
+      use policies and other conditions of every Third-Party Component,
+      including any use restrictions and export control terms they contain.
+   d) Required copyright notices, license texts and NOTICE files of
+      Third-Party Components are reproduced in THIRD_PARTY_NOTICES.md and
+      must be kept with any copy of the Software.
 
-5. Ownership
+5. Contributions
+
+   Unless agreed otherwise in writing, any contribution You submit to the
+   Licensor for inclusion in the Software is provided under terms that grant
+   the Licensor a perpetual, worldwide, irrevocable, royalty-free license to
+   use, modify, sublicense and distribute that contribution under any terms,
+   including commercial terms. You confirm that You have the right to make
+   each contribution You submit.
+
+6. Ownership
 
    The Software is licensed, not sold. The Licensor retains all right,
    title and interest in and to the Software. All rights not expressly
    granted in this License are reserved.
 
-6. Termination
+7. Termination
 
    This License terminates automatically if You breach any of its terms.
-   The Licensor may also terminate this License at any time by notice. Upon
-   termination You must stop using the Software and destroy all copies in
-   Your possession.
+   The Licensor may also terminate this License at any time by notice to
+   You. Upon termination You must stop using the Software and delete or
+   destroy all copies in Your possession or control.
 
-7. Disclaimer of Warranty
+8. Disclaimer of Warranty
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+   TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+   "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+   NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE AND NON-INFRINGEMENT.
 
-8. Limitation of Liability
+9. Limitation of Liability
 
-   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER
-   DEALINGS IN THE SOFTWARE.
+   TO THE EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE LICENSOR
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+   OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
+   THE SOFTWARE OR THE USE OF OR OTHER DEALINGS IN THE SOFTWARE.
 
-9. Commercial Licensing
+10. Commercial Licensing
 
    Any use beyond the scope of this License, including any Commercial Use,
    requires a separate written agreement with the Licensor.

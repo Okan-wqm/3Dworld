@@ -1,59 +1,80 @@
 # Dış Bileşen Lisans Kaydı
 
-> **Bu projenin kendi lisansı:** [`LICENSE`](LICENSE): *3Dworld Evaluation License*. Yalnızca test ve değerlendirme amaçlıdır, ticari kullanım yasaktır. Bu dosya ise **dışarıdan aldığımız** bileşenlerin lisanslarını listeler. Onları ticari kullanıma uygun seçmeye devam ediyoruz, böylece ileride ticari sürüme geçmek istersek engel çıkmaz.
+> **Bu projenin kendi lisansı:** [`LICENSE`](LICENSE) (*3Dworld Evaluation License*). Yalnızca test ve değerlendirme amaçlıdır, ticari kullanım yasaktır. Bu dosya ise **dışarıdan aldığımız** bileşenlerin lisanslarını listeler. Onları ticari kullanıma uygun seçmeye devam ediyoruz, böylece ileride ticari sürüme geçmek istersek engel çıkmaz.
 
-**Kural:** Projeye dışarıdan giren her model, kütüphane ve servis **ticari kullanıma uygun** olmalı. Bir bileşen bu listede ✅ olmadan koda eklenmez.
+**Kural:** Projeye dışarıdan giren her model, kütüphane ve servis **ticari kullanıma uygun** olmalı. Bir bileşen bu listede ✅ olmadan koda veya sunucuya eklenmez.
 
-- **İzinli lisanslar:** MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, MPL-2.0 (dosya bazlı copyleft; değiştirilen dosyalar açılır)
-- **Yasak:** Non-commercial (NC) lisanslar, "research only" lisanslar, AGPL, GPL (koda gömülü/dağıtılan), gelir veya kullanıcı eşikli özel lisanslar, bölge kısıtlı lisanslar
-- **Özel lisanslar** (ör. Meta "SAM License"): okunmadan ve bu dosyaya gerekçesiyle yazılmadan kullanılmaz
-- **Kapalı API'ler** (Claude, Veo, Seedance vb.): lisans değil servis koşulları (ToS) geçerli. Ticari kullanım ve çıktı hakları maddesi kontrol edilip buraya not edilir
+- **İzinli lisanslar:** MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, HPND, MPL-2.0 (dosya bazlı copyleft; değiştirilen MPL dosyaları MPL olarak kalır ve açılır).
+- **İstisna listesi** (adıyla onaylananlar, başkası değil):
+  - `easydict`: LGPL-3.0, TRELLIS kullanıyor. Değiştirilmeden, ayrı paket olarak import edilir.
+  - `ffmpeg-next`: WTFPL. Yalnızca FFmpeg'in LGPL derlemesiyle kullanılabilir, varsayılan olarak kullanılmıyor.
+- **Yasak:**
+  - Ticari kullanımı yasaklayan (NC) ve "yalnızca araştırma" lisansları.
+  - AGPL.
+  - Koda gömülen veya dağıtılan GPL.
+  - Gelir veya kullanıcı sayısı eşiği olan, ya da bölge kısıtlı özel lisanslar.
+- **Özel lisanslar** (ör. Meta SAM License, DINOv3 License): okunmadan ve bu dosyaya gerekçesiyle yazılmadan kullanılmaz.
+- **Kapalı API'ler** (Claude, Veo, Seedance vb.): lisans değil, servis koşulları (ToS) geçerli. Ticari kullanım ve çıktı hakları maddesi kontrol edilip buraya not edilir.
 
-Kontrol tarihi: **2026-11-21**. Kaynaklar: Hugging Face model kartındaki `license` alanı ve GitHub `LICENSE` dosyası. Lisanslar sürüm değiştikçe değişebilir. Yeni sürüme geçerken yeniden kontrol edin. Bu kayıt hukuki görüş değildir.
+**Kontrol:**
+- Tarih: **2026-11-21**.
+- Kaynaklar: Hugging Face model kartındaki `license` alanı, GitHub'daki `LICENSE` dosyası ve crates.io.
+- 4 bağımsız incelemeden geçti.
+- Lisanslar sürüm değiştikçe değişebilir, yeni sürüme geçerken yeniden kontrol edilir.
+- Bu kayıt hukuki görüş değildir.
 
 ---
 
 ## ✅ Onaylı modeller (ağırlıklar)
 
-| Bileşen | Kullanım | Lisans | Kaynak |
+| Bileşen | Kullanım | Lisans | Not |
 |---|---|---|---|
-| `facebook/sam2.1-hiera-large` (Meta SAM 2.1) | Segmentasyon | Apache-2.0 | HF model kartı |
-| `IDEA-Research/grounding-dino-base` | Etiketten kutu | Apache-2.0 | HF model kartı |
-| `google/owlv2-base-patch16-ensemble` | Etiketten kutu (yedek) | Apache-2.0 | HF model kartı |
-| `microsoft/Florence-2-large` | Etiketleme / kutu (yedek) | MIT | HF model kartı |
-| `Qwen/Qwen2.5-VL-7B-Instruct` | Sahne anlama (self-host VLM) | Apache-2.0 | HF model kartı |
-| `facebook/dinov2-large` | Görsel öznitelik | Apache-2.0 | HF model kartı |
-| `ZhengPeng7/BiRefNet` | Maske kenarı iyileştirme | MIT | HF model kartı |
-| `Ruicheng/moge-vitl`, `Ruicheng/moge-2-vitl` | Derinlik + kamera (FOV) | MIT | HF model kartı |
-| `depth-anything/Depth-Anything-V2-Small` | Derinlik (yedek) | Apache-2.0 | HF model kartı |
-| `Qwen/Qwen-Image-Edit`, `Qwen/Qwen-Image-Edit-2509` | Amodal tamamlama, inpaint | Apache-2.0 | HF model kartı |
-| LaMa (`advimman/lama`) | Hızlı inpaint | Apache-2.0 | GitHub LICENSE |
-| `microsoft/TRELLIS-image-large`, `microsoft/TRELLIS.2-4B` | Obje → 3D | MIT (model + kod) | HF + GitHub. ⚠️ alt bağımlılıklar aşağıda |
-| `stabilityai/TripoSR` | Hızlı obje → 3D (yedek) | MIT | HF model kartı |
-| `Wan-AI/Wan2.2-TI2V-5B` | Video üretimi | Apache-2.0 | HF model kartı |
-| `Wan-AI/Wan2.1-VACE-1.3B`, `Wan-AI/Wan2.1-VACE-14B` | Kontrollü video (depth/pose) | Apache-2.0 | HF model kartı |
+| `facebook/sam2.1-hiera-large` (Meta SAM 2.1) | Segmentasyon | Apache-2.0 | |
+| `IDEA-Research/grounding-dino-base` | Etiketten kutu | Apache-2.0 | |
+| `google/owlv2-base-patch16-ensemble` | Etiketten kutu (yedek) | Apache-2.0 | |
+| `microsoft/Florence-2-large` | Etiketleme / kutu (yedek) | MIT | |
+| `Qwen/Qwen2.5-VL-7B-Instruct` | Sahne anlama (kendi makinemizde) | Apache-2.0 | 3B sürümünün lisans alanı boş, **kullanılmaz** |
+| `facebook/dinov2-*` | Görsel öznitelik (TRELLIS v1 kullanıyor) | Apache-2.0 | |
+| `ZhengPeng7/BiRefNet` | Maske kenarı, arka plan silme | MIT | |
+| `Ruicheng/moge-2-vitl` (MoGe-2) | Derinlik + kamera (metrik) | MIT | v1 metrik ölçek vermez, MoGe-2 kullanılır |
+| `depth-anything/Depth-Anything-V2-Small` | Göreli derinlik (yedek) | Apache-2.0 | Yalnızca Small |
+| `Qwen/Qwen-Image-Edit`, `Qwen/Qwen-Image-Edit-2509` | Tamamlama, doldurma | Apache-2.0 | |
+| `QuantStack/Qwen-Image-Edit-GGUF` | 4-bit sürüm (20 GB GPU için) | Apache-2.0 | |
+| `lightx2v/Qwen-Image-Lightning` | 4–8 adımda hızlı üretim | Apache-2.0 | |
+| LaMa (`advimman/lama`) | Hızlı arka plan doldurma | Apache-2.0 | |
+| `microsoft/TRELLIS-image-large` (v1) | Obje → 3D | MIT (model + kod) | ⚠️ Kurulum bağımlılıkları aşağıda yasaklı. Girdi **RGBA** verilir, rembg devreye girmez |
+| `stabilityai/TripoSR` | Hızlı obje → 3D (yedek) | MIT | Stability'nin diğer 3D modelleri (SF3D, SPAR3D) yasaklı |
+| `Wan-AI/Wan2.1-VACE-1.3B`, `Wan-AI/Wan2.1-VACE-14B` | Kontrollü video | Apache-2.0 | 14B, 20 GB'a sığmaz. HF kartında "zararlı içerik paylaşma" kullanım maddesi var, engelleyici değil |
+| `Wan-AI/Wan2.1-T2V-1.3B`, `alibaba-pai/Wan2.1-Fun-1.3B-Control` | Video (yedek) | Apache-2.0 | |
+| `Wan-AI/Wan2.2-TI2V-5B` | Video (kontrolsüz) | Apache-2.0 | VACE kontrolü almaz |
+| `zai-org/CogVideoX-2b` | Video (yedek) | Apache-2.0 | 5B sürümü yasaklı |
 
 ## ✅ Onaylı kod / kütüphaneler
 
 | Bileşen | Kullanım | Lisans |
 |---|---|---|
+| PyTorch | Model çalıştırma | BSD-3-Clause |
 | sam2 (facebookresearch) | SAM 2 kodu | Apache-2.0 |
 | GroundingDINO | Kod | Apache-2.0 |
-| MoGe (microsoft) | Kod | MIT |
-| TRELLIS, TRELLIS.2 (microsoft) | Kod | MIT |
-| CuMesh, FlexGEMM, utils3d | TRELLIS.2 yardımcıları | MIT |
-| Wan2.2 | Kod | Apache-2.0 |
-| gsplat (nerfstudio) | Gaussian splat rasterizer / optimizasyon | Apache-2.0 |
-| kaolin (NVIDIA) | 3D yardımcıları | Apache-2.0 |
+| MoGe (microsoft) + utils3d | Kod | MIT |
+| TRELLIS (microsoft) | Kod (yasaklı bağımlılıklar olmadan) | MIT |
+| rembg + U²-Net | TRELLIS import ediyor (RGBA girdide çalışmaz) | MIT / Apache-2.0 |
+| VACE (`ali-vilab/VACE`) | Kod | Apache-2.0 (`LICENSE.txt`) |
+| Wan2.1 / Wan2.2 | Kod | Apache-2.0 |
+| kaolin (NVIDIA) | FlexiCubes, 3D yardımcıları | Apache-2.0 |
 | spconv | Sparse conv | Apache-2.0 |
 | flash-attention | Attention çekirdeği | BSD-3-Clause |
-| PyTorch3D | Diferansiyellenebilir render, texture baking | BSD |
-| Open3D | ICP, RANSAC, nokta bulutu | MIT |
+| PyTorch3D | Diferansiyellenebilir render, doku basma | BSD-3-Clause |
+| gsplat (nerfstudio) | Gaussian splat (Faz 2+) | Apache-2.0 |
 | xatlas | UV açma | MIT |
-| three.js | Web 3D | MIT |
-| Spark (sparkjsdev) | Web splat görüntüleyici (geçici yedek) | MIT |
-| GaussianSplats3D (mkkellogg) | Web splat görüntüleyici (yedek) | MIT |
-| MuJoCo | Robotik simülasyon / export (Faz 5) | Apache-2.0 |
+| MuJoCo | Robotik (Faz 5) | Apache-2.0 |
+| three.js, React Three Fiber, drei | Web 3D | MIT |
+| React, Next.js, Zustand | Web arayüz | MIT |
+| Spark (sparkjsdev) | Web splat önizleme | MIT |
+| GaussianSplats3D (mkkellogg) | Web splat önizleme (yedek) | MIT |
+| PostgreSQL | Veritabanı + iş kuyruğu | PostgreSQL License (BSD benzeri) |
+| SeaweedFS | S3 uyumlu depolama (opsiyonel) | Apache-2.0 |
+| Pillow | Görsel G/Ç | HPND (MIT-CMU) |
 
 ## ✅ Onaylı Rust crate'leri (crates.io, son sürüm)
 
@@ -63,59 +84,75 @@ Kontrol tarihi: **2026-11-21**. Kaynaklar: Hugging Face model kartındaki `licen
 | tokio | Async runtime | MIT |
 | tonic | gRPC (gerekirse) | MIT |
 | serde | Serileştirme | MIT OR Apache-2.0 |
-| sqlx | PostgreSQL | MIT OR Apache-2.0 |
-| redis | Redis istemcisi | BSD-3-Clause |
-| apalis | İş kuyruğu | MIT OR Apache-2.0 |
+| sqlx | PostgreSQL (kuyruk dahil) | MIT OR Apache-2.0 |
+| redis | Önbellek (gerekirse) | BSD-3-Clause |
 | utoipa | OpenAPI üretimi | MIT OR Apache-2.0 |
-| pyo3, maturin | Rust ↔ Python | MIT OR Apache-2.0 |
+| pyo3, maturin, numpy | Rust ↔ Python | MIT OR Apache-2.0 / BSD-2-Clause (numpy crate) |
 | wasm-bindgen | Rust → tarayıcı | MIT OR Apache-2.0 |
 | glam | Vektör/matris | MIT OR Apache-2.0 |
 | nalgebra | Lineer cebir | Apache-2.0 |
 | parry3d | Geometri sorguları | Apache-2.0 |
 | kiddo, rstar | KD-tree / R-tree | MIT OR Apache-2.0 |
 | rayon | Paralellik | MIT OR Apache-2.0 |
-| meshopt | Mesh sadeleştirme/optimizasyon | MIT OR Apache-2.0 |
+| meshopt | Mesh sadeleştirme (yalnızca sunucu) | MIT OR Apache-2.0 |
 | gltf | glTF okuma/yazma | MIT OR Apache-2.0 |
-| ply-rs | PLY (splat/nokta bulutu) | MIT |
-| xatlas-rs | UV açma | MIT |
+| ply-rs | PLY | MIT |
+| xatlas-rs | UV açma (yalnızca sunucu) | MIT |
 | image | Görsel G/Ç | MIT OR Apache-2.0 |
-| ort | ONNX Runtime bağlayıcısı | MIT OR Apache-2.0 |
+| ort | ONNX Runtime (ileride) | MIT OR Apache-2.0 |
 | candle-core, burn | Rust'ta model çıkarımı (ileride) | MIT OR Apache-2.0 |
 | rav1e | AV1 video kodlama (telifsiz) | BSD-2-Clause |
-| openh264 | H.264 kodlama | BSD-2-Clause (⚠️ H.264 patent ücretleri ayrı konu; Cisco'nun hazır binary'si kullanılırsa Cisco öder) |
-| cargo-deny | Lisans/güvenlik CI kontrolü | MIT OR Apache-2.0 |
+| openh264 | H.264 kodlama | BSD-2-Clause. ⚠️ H.264 patent ücreti ayrı: Cisco'nun hazır binary'si kullanılırsa Cisco öder |
+| cargo-deny, cargo-about | Lisans kontrolü, bildirim dosyası üretimi | MIT OR Apache-2.0 |
 
-`ffmpeg-next` (WTFPL) ancak FFmpeg'in LGPL derlemesiyle ve dinamik bağlamayla kullanılabilir. Varsayılan olarak kullanılmıyor.
+`apalis` iş kuyruğu **kaldırıldı**: işleri Rust'a özgü formatta sakladığı için Python worker'ları okuyamıyor. Yerine PostgreSQL `SKIP LOCKED` kuyruğu kullanılıyor.
 
 ## ⏳ Kontrol edilecek (eklenmeden önce)
 
 | Bileşen | Neden |
 |---|---|
-| VACE kod reposu (`ali-vilab/VACE`) | Model ağırlıkları Apache-2.0 doğrulandı. Repo LICENSE dosyası bu kontrolde bulunamadı. Wan2.x içindeki VACE entegrasyonunu (Apache-2.0) kullanmak yeterli olabilir |
-| `facebook/sam3`, `facebook/sam-3d-objects` | Lisans alanı "other" (Meta SAM License). Ticari maddeler okunmadan kullanılmaz |
+| `microsoft/TRELLIS.2-4B` | Kendisi MIT, ama **DINOv3** (Meta özel lisansı: ticari kullanıma izin veriyor, fakat ihracat/ITAR yasakları, tazminat maddesi ve fesih hakkı var) üzerine eğitilmiş, değiştirilemez. Varsayılan olarak RMBG-2.0 (yasaklı) yüklüyor; BiRefNet ile değiştirilmeli. DINOv3 şartları okunup kabul edilene kadar beklemede |
+| `facebook/sam3`, `facebook/sam-3d-objects` | Meta SAM License, ticari maddeleri okunmadı |
+| Metric3D v2 | HF'de lisans alanı yok, README ticari kullanım için iletişim istiyor |
+| Real-ESRGAN | Kod BSD-3; kullanılacak ağırlıkların lisansı kontrol edilmeli |
+| imageio-ffmpeg | Paket BSD-2 ama tekerlekleri **GPL FFmpeg** binary'si içeriyor. Kullanılırsa PyAV + LGPL FFmpeg ile değiştirilmeli |
+| Wan2.2-VACE-Fun-A14B | Apache-2.0 görünüyor, ama 20 GB'a sığmaz. Gerekirse ayrıntılı kontrol |
 | Claude API, Veo, Seedance, Kling, Runway | Her birinin ToS'unda ticari kullanım ve çıktı hakları maddesi |
 
 ## ❌ Yasak, kullanılmayacak
 
 | Bileşen | Lisans / sorun | Yerine |
 |---|---|---|
-| **nvdiffrast** (NVlabs) | NVIDIA Source Code License: NVIDIA dışındakiler için *"non-commercially … research or evaluation purposes only"*. **TRELLIS ve TRELLIS.2 kurulumu bunu kuruyor** (GLB texture baking, render) | PyTorch3D (BSD) veya kendi rasterizer'ımız |
-| **nvdiffrec** (NVlabs ve JeffreyXiang fork'u) | NVIDIA Source Code License. TRELLIS.2 PBR render için kullanıyor | Kendi PBR baking kodumuz |
-| **diffoctreerast** (JeffreyXiang) | Inria lisansından türetilmiş: *"cannot use … for commercial purposes"*. TRELLIS (v1) kuruyor | TRELLIS.2 yolu veya gsplat |
-| **mip-splatting / Inria gaussian-splatting rasterizer** | Inria Gaussian-Splatting License (non-commercial). TRELLIS (v1) kuruyor | gsplat (Apache-2.0) |
-| `depth-anything/Depth-Anything-V2-Base/Large/Giant` | CC-BY-NC-4.0 (Large doğrulandı) | V2-Small veya MoGe |
+| **nvdiffrast** (NVlabs) | NVIDIA Source Code License: *"research or evaluation purposes only"*. TRELLIS ve TRELLIS.2 kurulumu getiriyor | PyTorch3D veya kendi rasterizer'ımız |
+| **nvdiffrec** | NVIDIA Source Code License. TRELLIS.2 PBR render için kullanıyor | Kendi PBR doku basma kodumuz |
+| **diffoctreerast** | Inria türevi: *"cannot use … for commercial purposes"*. TRELLIS v1 getiriyor | TRELLIS'in mesh yolu + kaolin |
+| **mip-splatting / Inria `diff-gaussian-rasterization`** | Inria lisansı, ticari yasak. TRELLIS v1 getiriyor | gsplat (Apache-2.0) |
+| **pymeshfix** | GPL-3.0 (PyPI'de AGPL-3). TRELLIS v1 son işleme | Kendi mesh temizleme kodumuz |
+| **igraph** (python-igraph) | GPL-2. TRELLIS v1 son işleme | Kendi kodumuz |
+| **plyfile** | GPL-3.0. TRELLIS v1 ve TRELLIS.2 (o-voxel) | Rust PLY yazıcımız (ply-rs, MIT) |
+| **briaai/RMBG-2.0**, RMBG-1.4 | CC BY-NC-4.0 / Bria lisansı. TRELLIS.2 varsayılan olarak yüklüyor | BiRefNet (MIT) |
+| `depth-anything/Depth-Anything-V2-Base/Large/Giant` | CC-BY-NC-4.0 | V2-Small veya MoGe-2 |
 | Hunyuan3D 2.x, HunyuanWorld | Tencent lisansı: bölge kısıtı + kullanıcı eşiği | TRELLIS |
 | Stable Fast 3D, SPAR3D, SD3.x | Stability Community License (gelir eşiği) | TRELLIS / Qwen-Image-Edit |
-| FLUX.1 dev / Fill / Kontext dev | Non-commercial ağırlıklar | Qwen-Image-Edit |
+| FLUX.1 dev / Fill / Kontext dev | Ticari yasak ağırlıklar | Qwen-Image-Edit |
 | Ultralytics YOLOv8/11 | AGPL-3.0 | Grounding DINO / OWLv2 |
-| MinIO | AGPL-3.0 | S3 / R2 / SeaweedFS |
+| MinIO | AGPL-3.0 | Yerel disk / R2 / SeaweedFS |
 | CogVideoX-5B, LTX-Video | Özel lisans / gelir eşiği | Wan + VACE |
-| Autodesk FBX SDK | Kapalı lisans | glTF/OBJ/USD, ileride kendi ASCII-FBX yazıcımız |
+| VGGT (orijinal) | Ticari yasak | MoGe-2 |
+| Blender | GPL. Koda gömülmez, dağıtılmaz | Kendi yazıcılarımız. Yalnızca geliştiricinin elle kontrol aracı olarak kullanılabilir |
+| Autodesk FBX SDK | Kapalı lisans | GLB/OBJ/USD, ileride kendi ikili FBX yazıcımız |
 
-> **TRELLIS uyarısı:** TRELLIS'in kendisi MIT ama resmi `setup.sh` ile kurulduğunda yukarıdaki yasaklı paketler de geliyor. Worker imajında bu paketler **kurulmayacak**. Mesh çıkarma, texture baking ve render adımlarını PyTorch3D/gsplat ile kendimiz yazacağız. CI'da bu paket adları için bir kara liste kontrolü olacak.
+> **TRELLIS uyarısı:** TRELLIS kodu ve ağırlıkları MIT, ama resmi `setup.sh` yukarıdaki yasaklı paketleri kuruyor. Worker imajında bunlar **kurulmuyor**. Mesh çıkarma, doku basma, mesh temizleme ve PLY yazma adımlarını kendimiz yazıyoruz (PyTorch3D, kaolin, Rust `geom-core`).
 
 ## Süreç
 
-1. Yeni bileşen → bu dosyaya satır (lisans, sürüm/commit, kaynak linki, tarih).
-2. CI: Python için `pip-licenses`, npm için `license-checker`. İzinli liste dışında bir lisans varsa build kırılır. Ek olarak kara liste: `nvdiffrast`, `nvdiffrec`, `diffoctreerast`, `diff-gaussian-rasterization`, `ultralytics`.
-3. Docker imajları sabit sürüm/commit hash ile kurulur. Ağırlıklar kendi depolamamıza kopyalanır, lisans dosyalarıyla birlikte saklanır.
+1. **Yeni bileşen:** Bu dosyaya satır eklenir (lisans, sürüm/commit, kaynak, tarih).
+2. **Paket kontrolü (CI):** Python için `pip-licenses`, npm için `license-checker`, Rust için `cargo-deny`. İzinli liste ve istisna listesi dışında bir lisans varsa build kırılır.
+3. **Kara liste (CI):** `nvdiffrast`, `nvdiffrec`, `diffoctreerast`, `diff-gaussian-rasterization`, `pymeshfix`, `python-igraph`, `plyfile`, `ultralytics`, `imageio-ffmpeg`.
+4. **Ağırlıklar:** Paket kontrolüne görünmezler, bu yüzden ayrıca yönetilir:
+   - `weights/allowlist` dosyasında izinli model kimlikleri tutulur.
+   - Ağırlıklar kendi aynamızdan sunulur, internetten indirme kapalıdır (`HF_HUB_OFFLINE=1`).
+   - `torch.hub` ile indirme kapatılır.
+   - Listede olmayan bir kimlik yüklenmeye çalışılırsa hata verilir.
+5. **Bildirimler:** `THIRD_PARTY_NOTICES.md` dosyası `cargo-about` ve `license-checker` ile otomatik üretilir. Web paketine ve Docker imajlarına eklenir (MIT ve Apache-2.0 bildirimlerini korumak zorunlu, NOTICE dosyaları dahil).
+6. **Sabitleme:** Docker imajları sabit sürüm/commit ile kurulur. Ağırlıklar lisans dosyalarıyla birlikte saklanır.
