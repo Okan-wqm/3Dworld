@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["crates/scene-schema", "crates/geom-core"]
+members = ["crates/scene-schema", "crates/geom-core", "crates/geom-py"]
+# geom-py is a Python extension module built with maturin; `cargo test` skips it.
+default-members = ["crates/scene-schema", "crates/geom-core"]
 
 [workspace.package]
 version = "0.1.0"

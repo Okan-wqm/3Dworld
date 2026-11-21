@@ -1,0 +1,22 @@
+[package]
+name = "geom-py"
+description = "Python bindings for geom-core (imported as `geom_core`)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+publish.workspace = true
+
+[lib]
+name = "geom_py"
+crate-type = ["cdylib"]
+# Python extension modules cannot be linked into a test binary; tested from Python.
+test = false
+doctest = false
+
+[dependencies]
+geom-core.workspace = true
+scene-schema.workspace = true
+glam.workspace = true
+pyo3 = { version = "0.30", features = ["abi3-py310"] }
+numpy = "0.30"

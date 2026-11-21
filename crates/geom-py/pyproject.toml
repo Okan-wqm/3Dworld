@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project]
+name = "geom-core"
+description = "3Dworld geometry core (Rust) for Python GPU workers"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26"]
+dynamic = ["version"]
+
+[tool.maturin]
+module-name = "geom_core"
+features = ["pyo3/extension-module"]

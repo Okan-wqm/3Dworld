@@ -1,0 +1,18 @@
+# Model weights that workers are allowed to load. One Hugging Face model id per line.
+# Every entry must be marked ✅ in LICENSES.md. Workers refuse any id not listed here.
+facebook/sam2.1-hiera-large
+IDEA-Research/grounding-dino-base
+google/owlv2-base-patch16-ensemble
+microsoft/Florence-2-large
+Qwen/Qwen2.5-VL-7B-Instruct
+ZhengPeng7/BiRefNet
+Ruicheng/moge-2-vitl
+depth-anything/Depth-Anything-V2-Small
+Qwen/Qwen-Image-Edit-2509
+QuantStack/Qwen-Image-Edit-GGUF
+lightx2v/Qwen-Image-Lightning
+microsoft/TRELLIS-image-large
+stabilityai/TripoSR
+Wan-AI/Wan2.1-VACE-1.3B
+Wan-AI/Wan2.1-T2V-1.3B
+alibaba-pai/Wan2.1-Fun-1.3B-Control

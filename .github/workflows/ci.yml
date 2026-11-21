@@ -26,6 +26,23 @@ jobs:
           cargo run -q -p scene-schema --bin export-schema schema/scene.schema.json
           git diff --exit-code schema/
 
+  python-bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m venv .venv
+      - name: Build and test geom_core
+        run: |
+          . .venv/bin/activate
+          pip install maturin numpy pytest
+          (cd crates/geom-py && maturin develop --release)
+          pytest -q crates/geom-py/tests
+
   licenses:
     runs-on: ubuntu-latest
     steps:
