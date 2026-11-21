@@ -155,9 +155,33 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 
 ## 5. Teknoloji yığını
 
-- **Frontend:** Next.js + React + React Three Fiber + drei, durum yönetimi Zustand, gizmo'lar için `TransformControls`.
-- **API:** Python FastAPI, PostgreSQL, Redis + Celery/arq iş kuyruğu (her pipeline adımı ayrı job; ilerleme durumunu WebSocket/SSE ile ön yüze akıt).
-- **GPU worker'lar:** Her model için ayrı Docker imajı (bağımlılık çakışmalarını önler). Modal / RunPod / Lambda üzerinde otomatik ölçeklenen worker'lar. Kaba VRAM: SAM 2 + MoGe ~8 GB, TRELLIS ~16 GB, Qwen-Image-Edit ~24 GB+ (quantize ile daha az), Wan 2.2 TI2V-5B ~24 GB, Wan 14B ~80 GB.
+### 5.1 Rust nerede, Python nerede? (hız kuralı)
+
+İlke: **Rust'ı CPU'da çalışan, yoğun ve uzun ömürlü kodda kullan. GPU'daki model çıkarımını Python/PyTorch'ta bırak.** Model çıkarımında süre zaten CUDA çekirdeklerinde geçiyor. TRELLIS, Qwen-Image-Edit veya Wan'ı Rust'a taşımak aylar sürer ve hız kazandırmaz. Asıl hız kazancı modellerin *arasındaki* işlerde: nokta bulutu, mesh, splat, hizalama ön adımları, video kodlama ve orkestrasyon.
+
+| Alan | Dil | Neden |
+|---|---|---|
+| **API + orkestratör** (iş akışı, kuyruk, kredi, WebSocket ilerleme) | **Rust** (axum + tokio, sqlx, redis) | Düşük gecikme, tip güvenliği, tek binary. Python GIL derdi yok |
+| **Geometri çekirdeği `geom-core`**: derinlik → nokta bulutu → mesh, 2.5D katmanlar, zemin RANSAC, ICP ön hizalama, mesh sadeleştirme, UV, splat sıkıştırma/dönüştürme, glTF/PLY/OBJ/USD(A)/ASCII-FBX yazıcıları | **Rust** (glam/nalgebra, parry3d, kiddo, rayon, meshopt, gltf) | En büyük hız kazancı burada: Python döngülerine göre 10–100×, rayon ile tüm çekirdekler |
+| Aynı çekirdeğin Python'dan kullanımı | Rust → **PyO3 + maturin** | GPU worker'ları `geom_core` modülünü doğrudan çağırır, veri kopyalamadan (numpy) |
+| Aynı çekirdeğin tarayıcıdan kullanımı | Rust → **WASM** (wasm-bindgen) | Splat derinlik sıralaması, 2.5D mesh üretimi, sahne grafiği diff/undo tarayıcıda hızlı. **Tek kod hem sunucuda hem tarayıcıda** |
+| Hafif modellerin çıkarımı (SAM 2 decoder, derinlik, BiRefNet) | İleride **Rust + ort (ONNX Runtime)** | Python worker'a gitmeden hızlı etkileşim (tıkla → maske). Önce Python'da çalıştır, darboğaz olursa ONNX'e taşı |
+| Video kodlama (render pass'leri → MP4/AV1) | **Rust** (rav1e AV1, openh264) | Hızlı ve lisans-temiz kodlama |
+| Ağır modeller (TRELLIS, Qwen-Image-Edit, Wan, MoGe) + diferansiyellenebilir hizalama | **Python + PyTorch** | Modellerin kendi kodu bu. Port etmek kazanç değil |
+| Editör arayüzü | **TypeScript** (React + three.js) | UI ekosistemi burada. Ağır hesap WASM'a gider |
+
+Sınır kuralı: Rust ile Python arası sözleşme, `scene-schema` içinde tek kaynaktan üretilen tiplerle kurulur (Rust `serde` struct'ları → JSON Schema → TS ve Pydantic tipleri).
+
+Lisans notları:
+- Rust tarafında `cargo-deny` CI'da çalışır; izinli liste `LICENSES.md` ile aynı.
+- **H.264 kodlamada patent konusu var:** openh264'ü kaynaktan derlersen patent ücreti sana düşer, Cisco'nun hazır binary'sinde Cisco öder. AV1 (rav1e) telifsizdir, varsayılan olarak AV1 kullanılır, H.264 isteğe bağlıdır.
+- FFmpeg kullanılacaksa sadece LGPL derlemesi (`--enable-gpl` olmadan, x264'süz) ve dinamik bağlama.
+
+### 5.2 Diğer bileşenler
+
+- **Frontend:** Next.js + React + React Three Fiber + drei, durum yönetimi Zustand, gizmo'lar için `TransformControls`. Ağır hesaplar `geom-core` WASM modülünde.
+- **API:** Rust (axum), PostgreSQL (sqlx), Redis tabanlı iş kuyruğu (apalis). Her pipeline adımı ayrı job; ilerleme WebSocket/SSE ile ön yüze akar. OpenAPI dokümanı utoipa ile üretilir.
+- **GPU worker'lar:** Python. Kuyruktan iş alır, `geom_core` (PyO3) modülünü kullanır. Her model için ayrı Docker imajı (bağımlılık çakışmalarını önler). Modal / RunPod / Lambda üzerinde otomatik ölçeklenen worker'lar. Kaba VRAM: SAM 2 + MoGe ~8 GB, TRELLIS ~16 GB, Qwen-Image-Edit ~24 GB+ (quantize ile daha az), Wan 2.2 TI2V-5B ~24 GB, Wan 14B ~80 GB.
 - **Depolama:** S3 uyumlu (R2/S3); asset'ler content-hash ile adreslenir (aynı obje yeniden üretilmez).
 - **Sahne formatı:** Kendi `scene.json` şemamız (objeler, transform'lar, kamera intrinsics, ışıklar, kamera yolu, asset referansları, kullanıcı onay durumu) + glTF asset'ler. USD export sonradan.
 - **LLM/ajan:** Claude API tool use; sahne grafiği üzerinde tipli fonksiyonlar.
@@ -166,9 +190,16 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 
 ```
 3Dworld/
-  apps/web/              # Next.js + R3F editör
-  services/api/          # FastAPI, job orkestrasyonu, scene.json şeması
-  workers/
+  Cargo.toml             # Rust workspace
+  crates/
+    api/                 # Rust: axum API + orkestratör + kredi sistemi
+    geom-core/           # Rust: geometri çekirdeği (saf Rust, test edilebilir)
+    geom-py/             # Rust → Python bağlayıcısı (PyO3/maturin)
+    geom-wasm/           # Rust → tarayıcı bağlayıcısı (wasm-bindgen)
+    scene-schema/        # Rust serde tipleri → JSON Schema → TS/Pydantic
+    encode/              # Rust: render pass → AV1/H.264 video
+  apps/web/              # Next.js + R3F editör (geom-wasm'ı kullanır)
+  workers/               # Python GPU worker'ları
     understand/          # VLM etiketleme
     segment/             # Grounding DINO + SAM 2
     geometry/            # MoGe / depth
@@ -176,7 +207,6 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
     to3d/                # TRELLIS (+ lisans-temiz baking)
     align/               # poz/ölçek hizalama
     video/               # Wan+VACE ve kapalı API adaptörleri
-  packages/scene-schema/ # paylaşılan tipler (TS + Pydantic, tek kaynaktan üret)
   eval/                  # test görselleri + metrik scriptleri
   LICENSES.md
   PLAN.md
@@ -187,8 +217,9 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 ## 6. Yol haritası
 
 ### Faz 0 — Temel (1–2 hafta)
-- Lisans izin listesi + CI kontrolü, `LICENSES.md`.
-- Monorepo iskeleti, `scene.json` şeması v0, adaptör arayüzü.
+- Lisans izin listesi + CI kontrolü (`cargo-deny`, `pip-licenses`, `license-checker`), `LICENSES.md`.
+- Monorepo iskeleti: Rust workspace (`api`, `geom-core`, `geom-py`, `geom-wasm`, `scene-schema`), `scene.json` şeması v0, adaptör arayüzü.
+- `geom-core` v0: derinlik haritası → nokta bulutu → üçgen mesh → GLB. Python'dan (PyO3) ve tarayıcıdan (WASM) çağrılabilir. Python/numpy referans uygulamasına karşı hız ölçümü.
 - Bir GPU ortamında SAM 2, MoGe, TRELLIS'i ayrı ayrı çalıştırıp çıktıları doğrula.
 - **Çıktı:** Komut satırından `görsel → maskeler + point map + bir obje GLB`.
 

@@ -53,6 +53,38 @@ Kontrol tarihi: **2026-11-21**. Kaynaklar: Hugging Face model kartındaki `licen
 | GaussianSplats3D (mkkellogg) | Web splat görüntüleyici (yedek) | MIT |
 | MuJoCo | Robotik simülasyon / export (Faz 5) | Apache-2.0 |
 
+## ✅ Onaylı Rust crate'leri (crates.io, son sürüm)
+
+| Crate | Kullanım | Lisans |
+|---|---|---|
+| axum, tower-http | HTTP API | MIT |
+| tokio | Async runtime | MIT |
+| tonic | gRPC (gerekirse) | MIT |
+| serde | Serileştirme | MIT OR Apache-2.0 |
+| sqlx | PostgreSQL | MIT OR Apache-2.0 |
+| redis | Redis istemcisi | BSD-3-Clause |
+| apalis | İş kuyruğu | MIT OR Apache-2.0 |
+| utoipa | OpenAPI üretimi | MIT OR Apache-2.0 |
+| pyo3, maturin | Rust ↔ Python | MIT OR Apache-2.0 |
+| wasm-bindgen | Rust → tarayıcı | MIT OR Apache-2.0 |
+| glam | Vektör/matris | MIT OR Apache-2.0 |
+| nalgebra | Lineer cebir | Apache-2.0 |
+| parry3d | Geometri sorguları | Apache-2.0 |
+| kiddo, rstar | KD-tree / R-tree | MIT OR Apache-2.0 |
+| rayon | Paralellik | MIT OR Apache-2.0 |
+| meshopt | Mesh sadeleştirme/optimizasyon | MIT OR Apache-2.0 |
+| gltf | glTF okuma/yazma | MIT OR Apache-2.0 |
+| ply-rs | PLY (splat/nokta bulutu) | MIT |
+| xatlas-rs | UV açma | MIT |
+| image | Görsel G/Ç | MIT OR Apache-2.0 |
+| ort | ONNX Runtime bağlayıcısı | MIT OR Apache-2.0 |
+| candle-core, burn | Rust'ta model çıkarımı (ileride) | MIT OR Apache-2.0 |
+| rav1e | AV1 video kodlama (telifsiz) | BSD-2-Clause |
+| openh264 | H.264 kodlama | BSD-2-Clause (⚠️ H.264 patent ücretleri ayrı konu; Cisco'nun hazır binary'si kullanılırsa Cisco öder) |
+| cargo-deny | Lisans/güvenlik CI kontrolü | MIT OR Apache-2.0 |
+
+`ffmpeg-next` (WTFPL) ancak FFmpeg'in LGPL derlemesiyle ve dinamik bağlamayla kullanılabilir. Varsayılan olarak kullanılmıyor.
+
 ## ⏳ Kontrol edilecek (eklenmeden önce)
 
 | Bileşen | Neden |
