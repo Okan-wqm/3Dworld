@@ -4,7 +4,7 @@
 >
 > Kısıt: **Lisans derdi olmasın** → yalnızca ticari kullanıma açık (MIT / Apache-2.0 / BSD) model ve kütüphaneler. Kapalı servisler (Veo, Seedance, Kling, Runway…) sadece opsiyonel API adaptörü olarak; onlarda bağlayıcı olan lisans değil, servis koşulları (ToS).
 >
-> ⚠️ Lisanslar sürüm sürüm değişebiliyor. Aşağıdaki tabloyu başlangıç noktası olarak kullanın; her modeli eklemeden önce o sürümün model kartını/LICENSE dosyasını kontrol edip `LICENSES.md`'ye kaydedin. Bu hukuki danışmanlık değildir.
+> **Kesin kural:** Dışarıdan kullanılan her parça ticari kullanıma uygun lisanslı olmalı. Doğrulanmış liste, yasaklılar ve gerekçeleri [`LICENSES.md`](LICENSES.md) dosyasında (2026-11-21'de model kartları ve LICENSE dosyalarından kontrol edildi). Listede ✅ olmayan hiçbir şey koda girmez. Bu hukuki danışmanlık değildir.
 
 ---
 
@@ -117,7 +117,7 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 | 2a. Etiketten kutu | Grounding DINO | Apache-2.0 | OWLv2 (Apache-2.0), Florence-2 (MIT) |
 | 2b. Maske | SAM 2 / 2.1 | Apache-2.0 | Kenar iyileştirme: BiRefNet (MIT) |
 | 3. Derinlik + kamera | MoGe / MoGe-2 (point map + FOV) | MIT (doğrula) | Depth Anything V2 **Small** (Apache-2.0), Metric3D v2 (BSD-2) |
-| 4. Amodal tamamlama | Qwen-Image-Edit | Apache-2.0 | SDXL Inpainting (OpenRAIL++, kullanım kısıtları var ama ticari serbest) |
+| 4. Amodal tamamlama | Qwen-Image-Edit | Apache-2.0 | Qwen-Image-Edit-2509 (Apache-2.0) |
 | 5. Arka plan inpaint | LaMa (hızlı) | Apache-2.0 | Kalite için Qwen-Image-Edit |
 | 6. Obje → 3D | TRELLIS / TRELLIS.2 | MIT | Hızlı/düşük kalite: TripoSR (MIT). ⚠️ alt bağımlılıklara bak (§4) |
 | 7. Arka plan → 3D | Kendi kodumuz: inpaint + depth → katmanlı depth mesh | — | Splat optimizasyonu: gsplat (Apache-2.0) |
@@ -139,8 +139,8 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 | Hunyuan3D 2.x, HunyuanWorld | Tencent lisansı: AB/İngiltere/G.Kore hariç, kullanıcı sayısı eşiği | Kullanma |
 | Stable Fast 3D, SPAR3D, SD3.x | Stability Community License (gelir eşiği) | Kullanma veya eşiği takip et |
 | FLUX.1 dev / Fill / Kontext dev | Non-commercial ağırlıklar | Qwen-Image-Edit kullan |
-| **nvdiffrast** | NVIDIA non-commercial lisans; TRELLIS'in GLB texture baking adımı bunu kullanıyor | Baking'i PyTorch3D/kendi rasterizer'ımızla yeniden yaz, ya da NVIDIA'dan ticari lisans al |
-| Orijinal 3DGS rasterizer (Inria `diff-gaussian-rasterization`) | Non-commercial | **gsplat** (Apache-2.0) |
+| **nvdiffrast**, **nvdiffrec** | NVIDIA non-commercial lisans; TRELLIS ve TRELLIS.2 kurulumu bunları getiriyor (texture baking, PBR render) | Baking/render'ı PyTorch3D veya kendi rasterizer'ımızla yaz |
+| **diffoctreerast**, mip-splatting / Inria `diff-gaussian-rasterization` | Inria lisansı, non-commercial; TRELLIS v1 kurulumu getiriyor | **gsplat** (Apache-2.0) |
 | Ultralytics YOLOv8/11 | AGPL-3.0 | Grounding DINO / OWLv2 |
 | MinIO (self-host depolama) | AGPL-3.0 | S3 / Cloudflare R2 / SeaweedFS (Apache-2.0) |
 | SAM 3, SAM 3D | Meta'nın özel "SAM License"ı | Okumadan ekleme; SAM 2 güvenli |
