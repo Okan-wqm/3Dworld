@@ -68,6 +68,48 @@ Kural: Katman B'deki her model bir adaptör arkasında durur. Sonradan kendi mod
 
 ---
 
+## 1.1 Kullanıcı akışı: insan onaylı (human-in-the-loop)
+
+Makine önerir, insan kontrol eder: etiketleme işlerindeki "insan doğrulaması" mantığı. Her ekranda aynı üç düğme var: **Onayla / Düzelt / Yeniden üret**. Bir sonraki adım ancak önceki adım onaylanınca başlar, böylece hata 3D'ye taşınmaz ve GPU kredisi boşa gitmez.
+
+**Ekran 1: Yükleme.** Görsel yüklenir. Arka planda VLM etiketleri, SAM 2 maskeleri ve MoGe derinliği hazırlanır. SAM 2'nin görsel kodlayıcısı bir kez GPU'da çalışır, sonuçları saklanır.
+
+**Ekran 2: Objeleri seç ve doğrula ("bu bot mu, at mı?").**
+- Görselin üstünde renkli maskeler, yanda obje listesi. Listeden ya da görselden tıklayınca obje vurgulanır.
+- **Etiket düzelt:** "oyuncak" → "saman", "bot" → "kovboy botu". Düzeltilen etiket sonraki adımlara (tamamlama, 3D) prompt olarak gider.
+- **Eksik obje ekle:** Kaçırılan objeye tıklanır, SAM 2 o noktadan anında maske çıkarır. Maske çözücüsü hafif olduğu için tarayıcıda veya Rust + ONNX ile milisaniyeler içinde çalışır.
+- **Maske düzelt:** Fırça ile ekle/sil, iki maskeyi birleştir, bir maskeyi böl.
+- **Obje çıkar:** Arka planın parçası sayılacaklar ("duvar", "gökyüzü") obje listesinden çıkarılır.
+
+**Ekran 3: Tamamlamaları kontrol et ("yarım atı düzgün tamamladı mı?").**
+- Her obje için bir kart: solda orijinal kesik/örtülü hali, sağda tamamlanmış hali.
+- Onayla, yeniden üret (farklı seed ile 2–4 aday yan yana) veya prompt ekle ("atın kuyruğu da görünsün").
+- **Arka plan kartı:** objeler çıkarılmış ve boşlukları doldurulmuş arka plan. Bu adım şart: obje 3D'de yerinden oynatıldığında arkasında delik değil, doldurulmuş zemin görünmeli.
+
+**Ekran 4: Kredi onayı.** Obje sayısı ve kaliteye göre tahmini GPU süresi ve kredi gösterilir, kullanıcı onaylar.
+
+**Ekran 5: 3D'ye çevirme.** Her obje paralel olarak 3D'ye çevrilir: TRELLIS, tamamlanmış görselden objenin görünmeyen arka tarafını da tahmin eder. Arka plan derinlikten 3D zemine çevrilir. Objeler tek tek hazır oldukça sahnede belirir. Sonuçlar "orijinal kameradan" gösterilir ve fotoğrafla üst üste bindirilerek bire bir uyum kontrol edilir.
+
+**Ekran 6: 3D sahne editörü (mouse ile hareket).**
+- **Kamera:** sağ tık veya sürükle ile sahne etrafında dön, tekerlek ile yakınlaş. "Orijinal kameraya dön" düğmesi.
+- **Seç:** objeye tıkla. Ekran ışını (raycast) objeyi bulur ve vurgular.
+- **Taşı (sağa/sola/ileri/geri):** sürükleyince obje **zemin düzlemi üzerinde** kayar. Zemin, Faz 2'de RANSAC ile bulunur, böylece obje havaya kalkmaz ya da yere gömülmez. Shift + sürükle ile yükseklik değişir.
+- **Döndür / ölçekle:** dikey eksen etrafında döndürme halkası; köşe tutamakları veya tekerlek ile ölçek.
+- **Çarpışma:** objeler birbirinin içine girmez (parry3d, WASM).
+- **Geri al / yinele, "orijinal konuma sıfırla".** Her hareket sahne grafiğinde bir diff olarak saklanır. Faz 4'teki ajan da aynı diff'leri üretir.
+- **Bilinen sınır:** Objelerin ışığı fotoğraftan geliyor. Obje çok farklı bir yere taşınırsa gölge ve ışık uyumsuz görünebilir. Başlangıçta basit temas gölgesi kullanılır, ileride yeniden ışıklandırma (relight) eklenir.
+
+**Her insan kararı veridir.** Etiket düzeltmeleri, eklenen maskeler, seçilen/reddedilen tamamlama adayları ve yeniden üretme sayıları `feedback` tablosuna kaydedilir. Bunlar hem kalite ölçümü (hangi adım en çok düzeltiliyor?) hem de Katman C'de kendi modellerimizi ince ayarlamak için eğitim verisi olur. Kullanıcı sözleşmesinde bu kullanım için açık izin alınır.
+
+Obje başına durum makinesi:
+
+```
+önerildi → (etiket onaylandı | düzeltildi) → tamamlandı → tamamlama onaylandı → 3D üretiliyor → 3D hazır → yerleştirildi
+                     ↑______________ yeniden üret / düzelt ______________|
+```
+
+---
+
 ## 2. Pipeline mimarisi
 
 ```
