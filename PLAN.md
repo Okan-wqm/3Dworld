@@ -1,5 +1,7 @@
 # 3Dworld — Ürün ve Teknik Plan
 
+> **License notice:** This project is for testing and evaluation purposes only and is strictly not licensed for commercial use. See [`LICENSE`](LICENSE). Third-party components remain under their own licenses (see [`LICENSES.md`](LICENSES.md)).
+
 > Hedef: Tek bir 2D görseli **anlayan**, parçalara ayıran, her objeyi ve arka planı **3D'ye çeviren**, kullanıcının tarayıcıda düzenleyebildiği bir sahne kuran ve bu sahneden **üretken video modellerini kontrol eden** (kamera, düzen, derinlik) bir "planlama + kontrol katmanı".
 >
 > Kısıt: **Lisans derdi olmasın** → yalnızca ticari kullanıma açık (MIT / Apache-2.0 / BSD) model ve kütüphaneler. Kapalı servisler (Veo, Seedance, Kling, Runway…) sadece opsiyonel API adaptörü olarak; onlarda bağlayıcı olan lisans değil, servis koşulları (ToS).

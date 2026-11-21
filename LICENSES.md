@@ -1,5 +1,7 @@
 # Dış Bileşen Lisans Kaydı
 
+> **Bu projenin kendi lisansı:** [`LICENSE`](LICENSE): *3Dworld Evaluation License*. Yalnızca test ve değerlendirme amaçlıdır, ticari kullanım yasaktır. Bu dosya ise **dışarıdan aldığımız** bileşenlerin lisanslarını listeler. Onları ticari kullanıma uygun seçmeye devam ediyoruz, böylece ileride ticari sürüme geçmek istersek engel çıkmaz.
+
 **Kural:** Projeye dışarıdan giren her model, kütüphane ve servis **ticari kullanıma uygun** olmalı. Bir bileşen bu listede ✅ olmadan koda eklenmez.
 
 - **İzinli lisanslar:** MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, MPL-2.0 (dosya bazlı copyleft; değiştirilen dosyalar açılır)
