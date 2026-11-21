@@ -1,0 +1,354 @@
+{
+  "$defs": {
+    "AssetRef": {
+      "description": "Reference to a file in asset storage. `sha256` makes assets content-addressed so the\nsame output is never generated twice.",
+      "properties": {
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "type": "object"
+    },
+    "Background": {
+      "properties": {
+        "asset": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Background geometry (GLB)."
+        },
+        "inpainted_image": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Background with objects removed and holes filled."
+        },
+        "stale": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stale"
+      ],
+      "type": "object"
+    },
+    "Camera": {
+      "properties": {
+        "intrinsics": {
+          "$ref": "#/$defs/Intrinsics"
+        },
+        "pose": {
+          "$ref": "#/$defs/Transform",
+          "description": "Camera-to-world transform. Identity for the original camera."
+        }
+      },
+      "required": [
+        "intrinsics",
+        "pose"
+      ],
+      "type": "object"
+    },
+    "Intrinsics": {
+      "properties": {
+        "cx": {
+          "description": "Principal point X, in pixels.",
+          "format": "float",
+          "type": "number"
+        },
+        "cy": {
+          "description": "Principal point Y, in pixels.",
+          "format": "float",
+          "type": "number"
+        },
+        "fx": {
+          "description": "Focal length along X, in pixels.",
+          "format": "float",
+          "type": "number"
+        },
+        "fy": {
+          "description": "Focal length along Y, in pixels.",
+          "format": "float",
+          "type": "number"
+        },
+        "height": {
+          "description": "Image height in pixels.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "width": {
+          "description": "Image width in pixels.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fx",
+        "fy",
+        "cx",
+        "cy",
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "Label": {
+      "properties": {
+        "confidence": {
+          "description": "Model confidence in `[0, 1]`; `None` for labels typed by the user.",
+          "format": "float",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/LabelSource"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source"
+      ],
+      "type": "object"
+    },
+    "LabelSource": {
+      "enum": [
+        "model",
+        "user"
+      ],
+      "type": "string"
+    },
+    "ObjectStatus": {
+      "properties": {
+        "failure": {
+          "description": "Last generation error, if the most recent attempt failed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stage": {
+          "$ref": "#/$defs/Stage"
+        },
+        "stale_from": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outputs at or after `stale_from` exist but no longer match their inputs."
+        }
+      },
+      "required": [
+        "stage"
+      ],
+      "type": "object"
+    },
+    "SceneObject": {
+      "properties": {
+        "asset": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Generated 3D asset (GLB)."
+        },
+        "completion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Approved amodal completion (RGBA, background removed)."
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "mask": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AssetRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Binary mask in the source image."
+        },
+        "status": {
+          "$ref": "#/$defs/ObjectStatus"
+        },
+        "transform": {
+          "$ref": "#/$defs/Transform",
+          "description": "Object-to-world transform."
+        },
+        "transform_edited_by_user": {
+          "description": "True once the user has moved, rotated or scaled the object by hand. Such\ntransforms are kept when the asset is regenerated.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "transform",
+        "transform_edited_by_user",
+        "status"
+      ],
+      "type": "object"
+    },
+    "Stage": {
+      "oneOf": [
+        {
+          "const": "proposed",
+          "description": "Detected by the model, waiting for the user.",
+          "type": "string"
+        },
+        {
+          "const": "label_confirmed",
+          "description": "Label and mask approved or corrected by the user.",
+          "type": "string"
+        },
+        {
+          "const": "completed",
+          "description": "Amodal completion generated, waiting for approval.",
+          "type": "string"
+        },
+        {
+          "const": "completion_approved",
+          "description": "Completion approved by the user.",
+          "type": "string"
+        },
+        {
+          "const": "generating3d",
+          "description": "3D generation running.",
+          "type": "string"
+        },
+        {
+          "const": "ready3d",
+          "description": "3D asset generated.",
+          "type": "string"
+        },
+        {
+          "const": "placed",
+          "description": "Asset aligned into the scene.",
+          "type": "string"
+        }
+      ]
+    },
+    "Transform": {
+      "description": "Translation, rotation (unit quaternion `[x, y, z, w]`) and non-uniform scale, applied\nin glTF order: scale, then rotate, then translate.",
+      "properties": {
+        "rotation": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "scale": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array"
+        },
+        "translation": {
+          "items": {
+            "format": "float",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array"
+        }
+      },
+      "required": [
+        "translation",
+        "rotation",
+        "scale"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "background": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Background"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "camera": {
+      "$ref": "#/$defs/Camera",
+      "description": "The original camera that took the photo."
+    },
+    "objects": {
+      "items": {
+        "$ref": "#/$defs/SceneObject"
+      },
+      "type": "array"
+    },
+    "schema_version": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "source_image": {
+      "$ref": "#/$defs/AssetRef",
+      "description": "The uploaded photo."
+    }
+  },
+  "required": [
+    "schema_version",
+    "source_image",
+    "camera",
+    "objects"
+  ],
+  "title": "Scene",
+  "type": "object"
+}

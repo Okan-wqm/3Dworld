@@ -1,0 +1,25 @@
+[workspace]
+resolver = "3"
+members = ["crates/scene-schema", "crates/geom-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license-file = "LICENSE"
+publish = false
+
+[workspace.dependencies]
+scene-schema = { path = "crates/scene-schema" }
+geom-core = { path = "crates/geom-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+schemars = "1"
+glam = "0.34"
+thiserror = "2"
+rayon = "1"
+gltf = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
