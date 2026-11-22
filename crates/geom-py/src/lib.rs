@@ -17,9 +17,8 @@ fn value_err(e: impl std::fmt::Display) -> PyErr {
 }
 
 fn to_vec3(flat: &[f32]) -> Vec<Vec3> {
-    flat.chunks_exact(3)
-        .map(|c| Vec3::new(c[0], c[1], c[2]))
-        .collect()
+    let (triples, _) = flat.as_chunks::<3>();
+    triples.iter().map(|&c| Vec3::from_array(c)).collect()
 }
 
 fn vec3_array<'py>(py: Python<'py>, v: &[Vec3]) -> Bound<'py, PyArray2<f32>> {
@@ -199,7 +198,7 @@ fn write_ply_points<'py>(
             let s = c
                 .as_slice()
                 .map_err(|_| value_err("colors must be C-contiguous"))?;
-            Some(s.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect())
+            Some(s.as_chunks::<3>().0.to_vec())
         }
         None => None,
     };
