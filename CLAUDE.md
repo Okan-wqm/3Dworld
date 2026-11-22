@@ -6,7 +6,8 @@ This project is built by LLM coding sessions, each starting in a fresh container
 
 - Start: `make setup` (or `make setup-models` when you run models; `GPU=1` for CUDA). Use `.venv/bin/python`.
 - Finish: `make ci` must pass. It is exactly what CI runs: lint (rustfmt, clippy `-D warnings`, ruff, mypy strict on model-free modules), Rust and Python tests, the schema contract, the license gates.
-- After changing Rust code used from Python: `make bindings`, and keep `crates/geom-py/geom_core.pyi` in sync with the `#[pyfunction]`s.
+- After changing Rust code used from Python, or the type stub `crates/geom-py/geom_core.pyi` (it is installed with the bindings): `make bindings`. Keep the stub in sync with the `#[pyfunction]`s.
+- CI uses only the model-free environment (`make setup`). Code checked by mypy or imported by default tests must not need the model stack at import time; check with a `make setup` environment before pushing.
 - The Rust toolchain version lives only in `rust-toolchain.toml`; Python versions only in `requirements/` (exact pins, transitive pins in `constraints.txt`).
 
 ## Licenses (hard rule)

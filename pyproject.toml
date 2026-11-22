@@ -39,5 +39,7 @@ strict = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["scipy", "scipy.*"]
+# scipy has no stubs; huggingface_hub is only in the model stack, which CI's
+# model-free environment does not install.
+module = ["scipy", "scipy.*", "huggingface_hub", "huggingface_hub.*"]
 ignore_missing_imports = true

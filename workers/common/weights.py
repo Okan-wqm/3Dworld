@@ -46,11 +46,12 @@ def require_allowed(model_id: str) -> str:
 
 
 def fetch(model_id: str, filename: str) -> str:
-    """Local path of `filename` from the allowlisted model at its pinned revision."""
-    from huggingface_hub import hf_hub_download
-
+    """Local path of `filename` from the allowlisted model at its pinned revision.
+    The license checks run before the download library is even imported."""
     require_allowed(model_id)
     revision = pinned_revisions().get(model_id)
     if revision is None:
         raise ForbiddenWeightsError(f"'{model_id}' has no pinned revision in weights/revisions.txt.")
-    return hf_hub_download(model_id, filename, revision=revision)
+    from huggingface_hub import hf_hub_download
+
+    return str(hf_hub_download(model_id, filename, revision=revision))

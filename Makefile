@@ -18,7 +18,7 @@ setup-models:
 
 # Rebuild the Python bindings after changing Rust code.
 bindings:
-	$(VENV)/bin/maturin develop --release -q -m crates/geom-py/Cargo.toml
+	VIRTUAL_ENV=$(abspath $(VENV)) $(VENV)/bin/maturin develop --release -q -m crates/geom-py/Cargo.toml
 
 lint: lint-rust lint-python
 
