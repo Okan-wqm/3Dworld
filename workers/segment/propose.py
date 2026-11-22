@@ -16,14 +16,22 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
-from huggingface_hub import hf_hub_download
+
 from workers.common.depth_ops import occluding_fraction
-from workers.common.weights import require_allowed
+from workers.common.weights import fetch
 
 # (Hugging Face repo, checkpoint file, sam2 config name)
 MODELS = {
-    "large": ("facebook/sam2.1-hiera-large", "sam2.1_hiera_large.pt", "configs/sam2.1/sam2.1_hiera_l.yaml"),
-    "small": ("facebook/sam2.1-hiera-small", "sam2.1_hiera_small.pt", "configs/sam2.1/sam2.1_hiera_s.yaml"),
+    "large": (
+        "facebook/sam2.1-hiera-large",
+        "sam2.1_hiera_large.pt",
+        "configs/sam2.1/sam2.1_hiera_l.yaml",
+    ),
+    "small": (
+        "facebook/sam2.1-hiera-small",
+        "sam2.1_hiera_small.pt",
+        "configs/sam2.1/sam2.1_hiera_s.yaml",
+    ),
 }
 
 
@@ -31,16 +39,29 @@ MODELS = {
 class Proposal:
     mask: np.ndarray  # (H, W) bool
     score: float  # SAM predicted IoU
-    area_frac: float
-    occluding: float  # fraction of its outline where it is in front of its surroundings
-    bbox: tuple[int, int, int, int]  # x, y, w, h
+    # Fraction of the outline where the object is in front of its surroundings; only
+    # measured for automatic proposals (None for clicked objects).
+    occluding: float | None = None
+
+    # Derived from the mask so they stay correct when the mask is trimmed.
+    @property
+    def area_frac(self) -> float:
+        return float(self.mask.mean())
+
+    @property
+    def bbox(self) -> tuple[int, int, int, int]:
+        """x, y, width, height of the mask; zeros for an empty mask."""
+        ys, xs = np.nonzero(self.mask)
+        if xs.size == 0:
+            return (0, 0, 0, 0)
+        return (int(xs.min()), int(ys.min()), int(np.ptp(xs)) + 1, int(np.ptp(ys)) + 1)
 
 
 def load_sam(size: str = "large", device: str = "cpu"):
     from sam2.build_sam import build_sam2
 
     repo, ckpt, cfg = MODELS[size]
-    path = hf_hub_download(require_allowed(repo), ckpt)
+    path = fetch(repo, ckpt)
     return build_sam2(cfg, path, device=device)
 
 
@@ -59,8 +80,9 @@ def propose_objects(
 
     image: (H, W, 3) uint8. depth: (H, W) meters, NaN where invalid.
     Keeps masks that occlude their surroundings along a good part of their outline
-    (objects, not walls/floors), and whole objects rather than their parts: candidates are visited from large to
-    small and a candidate mostly covered by an already kept object is dropped.
+    (objects, not walls/floors), and whole objects rather than their parts: candidates
+    are visited from large to small and a candidate mostly covered by an already kept
+    object is dropped.
     """
     from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
 
@@ -85,9 +107,7 @@ def propose_objects(
         occluding = occluding_fraction(m, depth, gap_px, jump=0.03)
         if occluding < min_occluding:
             continue
-        candidates.append(
-            Proposal(m, float(r["predicted_iou"]), float(frac), occluding, tuple(int(v) for v in r["bbox"]))
-        )
+        candidates.append(Proposal(m, float(r["predicted_iou"]), occluding))
 
     kept: list[Proposal] = []
     covered = np.zeros((h, w), bool)

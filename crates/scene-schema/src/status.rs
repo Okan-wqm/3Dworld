@@ -48,6 +48,19 @@ impl Stage {
             Placed => return None,
         })
     }
+
+    pub fn prev(self) -> Option<Stage> {
+        use Stage::*;
+        Some(match self {
+            Proposed => return None,
+            LabelConfirmed => Proposed,
+            Completed => LabelConfirmed,
+            CompletionApproved => Completed,
+            Generating3d => CompletionApproved,
+            Ready3d => Generating3d,
+            Placed => Ready3d,
+        })
+    }
 }
 
 /// An upstream edit made by the user.
@@ -62,15 +75,20 @@ pub enum Change {
 
 impl Change {
     /// First stage whose outputs become outdated because of this change.
+    ///
+    /// A new completion invalidates from `Generating3d`, not `Ready3d`: a generation
+    /// already running was started from the old completion, so its result must not be
+    /// accepted.
     pub fn invalidates_from(self) -> Stage {
         match self {
             Change::Label | Change::Mask => Stage::Completed,
-            Change::Completion => Stage::Ready3d,
+            Change::Completion => Stage::Generating3d,
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct ObjectStatus {
     pub stage: Stage,
     /// Outputs at or after `stale_from` exist but no longer match their inputs.
@@ -135,13 +153,8 @@ impl ObjectStatus {
     /// the last stage that is still valid, and will advance again from there.
     pub fn rewind_for_regeneration(&mut self) {
         if let Some(from) = self.stale_from.take() {
-            // `from` is never `Proposed`, so the previous stage always exists.
-            self.stage = match from {
-                Stage::Completed => Stage::LabelConfirmed,
-                Stage::Ready3d => Stage::CompletionApproved,
-                other => other,
-            }
-            .min(self.stage);
+            let last_valid = from.prev().unwrap_or(Stage::Proposed);
+            self.stage = last_valid.min(self.stage);
         }
     }
 
@@ -197,7 +210,7 @@ mod tests {
     fn new_completion_only_invalidates_3d() {
         let mut s = at(Stage::Ready3d);
         s.apply_change(Change::Completion);
-        assert_eq!(s.stale_from, Some(Stage::Ready3d));
+        assert_eq!(s.stale_from, Some(Stage::Generating3d));
         s.rewind_for_regeneration();
         assert_eq!(s.stage, Stage::CompletionApproved);
         assert!(!s.is_stale());
@@ -231,6 +244,44 @@ mod tests {
         assert_eq!(s.failure.as_deref(), Some("out of memory"));
         s.advance(Stage::Generating3d).unwrap();
         assert!(s.failure.is_none());
+    }
+
+    #[test]
+    fn completion_edited_during_generation_rejects_the_old_result() {
+        let mut s = at(Stage::Generating3d);
+        s.apply_change(Change::Completion);
+        assert_eq!(
+            s.advance(Stage::Ready3d),
+            Err(StatusError::Stale(Stage::Generating3d))
+        );
+        s.rewind_for_regeneration();
+        assert_eq!(s.stage, Stage::CompletionApproved);
+        s.advance(Stage::Generating3d).unwrap();
+        s.advance(Stage::Ready3d).unwrap();
+    }
+
+    #[test]
+    fn rewind_goes_to_the_stage_before_any_stale_stage() {
+        for from in [
+            Stage::Completed,
+            Stage::Generating3d,
+            Stage::Ready3d,
+            Stage::Placed,
+        ] {
+            let mut s = at(Stage::Placed);
+            s.stale_from = Some(from);
+            s.rewind_for_regeneration();
+            assert_eq!(Some(s.stage), from.prev(), "stale from {from:?}");
+        }
+    }
+
+    #[test]
+    fn prev_inverts_next() {
+        let mut st = Stage::Proposed;
+        while let Some(n) = st.next() {
+            assert_eq!(n.prev(), Some(st));
+            st = n;
+        }
     }
 
     #[test]

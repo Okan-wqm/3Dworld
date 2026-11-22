@@ -6,8 +6,11 @@
 //! - the scene graph itself ([`scene`]),
 //! - the per-object review state machine and invalidation rules ([`status`]).
 //!
-//! The JSON Schema exported by the `export-schema` binary is used to generate the
-//! TypeScript and Pydantic types, so the three languages cannot drift apart.
+//! The JSON Schema exported by the `export-schema` binary (`schema/scene.schema.json`)
+//! is the contract for other languages. Drift is caught by tests, not by code
+//! generation: the Python builder (`workers/common/scene_json.py`) is validated against
+//! the schema, and its committed output (`schema/fixtures/scene.example.json`) must
+//! deserialize here (see `tests/fixture.rs`). Unknown fields are rejected on both sides.
 
 pub mod camera;
 pub mod coords;

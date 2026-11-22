@@ -18,6 +18,33 @@ pub struct Texture<'a> {
     pub mime_type: &'a str,
 }
 
+const PNG_SIGNATURE: &[u8] = &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+const JPEG_SIGNATURE: &[u8] = &[0xFF, 0xD8, 0xFF];
+
+impl Texture<'_> {
+    /// Checks that the bytes really are the declared image type, so a broken texture is
+    /// reported here instead of failing later in a viewer.
+    fn validate(&self) -> Result<(), GeomError> {
+        let signature = match self.mime_type {
+            "image/png" => PNG_SIGNATURE,
+            "image/jpeg" => JPEG_SIGNATURE,
+            other => {
+                return Err(GeomError::InvalidTexture(format!(
+                    "mime type must be image/png or image/jpeg, got {other:?}"
+                )));
+            }
+        };
+        if !self.bytes.starts_with(signature) {
+            return Err(GeomError::InvalidTexture(format!(
+                "bytes are not a {} image ({} bytes)",
+                self.mime_type,
+                self.bytes.len()
+            )));
+        }
+        Ok(())
+    }
+}
+
 /// One named node of a multi-mesh GLB (e.g. one object layer, or the background).
 #[derive(Debug, Clone, Copy)]
 pub struct GlbPart<'a> {
@@ -66,6 +93,11 @@ pub fn write_glb_scene(parts: &[GlbPart<'_>]) -> Result<Vec<u8>, GeomError> {
         views.len() - 1
     };
 
+    for part in parts {
+        if let Some(t) = &part.texture {
+            t.validate()?;
+        }
+    }
     for part in parts {
         let mesh = part.mesh;
         if mesh.positions.len() > u32::MAX as usize {
@@ -153,6 +185,9 @@ pub fn write_glb_scene(parts: &[GlbPart<'_>]) -> Result<Vec<u8>, GeomError> {
     pad_to_4(&mut json_bytes, b' ');
 
     let total = 12 + 8 + json_bytes.len() + 8 + bin.len();
+    if total > u32::MAX as usize {
+        return Err(GeomError::TooLarge(total));
+    }
     let mut out = Vec::with_capacity(total);
     out.extend_from_slice(&GLB_MAGIC.to_le_bytes());
     out.extend_from_slice(&2u32.to_le_bytes());
@@ -247,6 +282,30 @@ mod tests {
         assert_eq!(names, ["background", "obj-1", "empty"]);
         assert_eq!(images.len(), 2);
         assert_eq!(doc.scenes().next().unwrap().nodes().count(), 3);
+    }
+
+    #[test]
+    fn invalid_textures_are_rejected() {
+        let mesh = sample_mesh();
+        for (bytes, mime) in [
+            (&b""[..], "image/png"),
+            (PNG, "image/jpeg"),
+            (&b"not an image"[..], "image/png"),
+            (PNG, "image/webp"),
+        ] {
+            let tex = Texture {
+                bytes,
+                mime_type: mime,
+            };
+            assert!(
+                matches!(
+                    write_glb(&mesh, Some(tex)),
+                    Err(GeomError::InvalidTexture(_))
+                ),
+                "{mime} with {} bytes accepted",
+                bytes.len()
+            );
+        }
     }
 
     #[test]

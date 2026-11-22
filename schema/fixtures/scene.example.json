@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "source_image": {
+    "uri": "source.png",
+    "sha256": null
+  },
+  "camera": {
+    "intrinsics": {
+      "fx": 384.0,
+      "fy": 384.0,
+      "cx": 384.0,
+      "cy": 256.0,
+      "width": 768,
+      "height": 512
+    },
+    "pose": {
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "objects": [
+    {
+      "id": "obj-01",
+      "label": {
+        "text": "horse",
+        "source": "model",
+        "confidence": 0.75
+      },
+      "mask": {
+        "uri": "masks/obj-01.png",
+        "sha256": null
+      },
+      "completion": null,
+      "asset": null,
+      "transform": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "transform_edited_by_user": false,
+      "status": {
+        "stage": "proposed",
+        "stale_from": null,
+        "failure": null
+      }
+    },
+    {
+      "id": "obj-02",
+      "label": {
+        "text": "object",
+        "source": "model",
+        "confidence": 0.5
+      },
+      "mask": {
+        "uri": "masks/obj-02.png",
+        "sha256": null
+      },
+      "completion": null,
+      "asset": null,
+      "transform": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "transform_edited_by_user": false,
+      "status": {
+        "stage": "proposed",
+        "stale_from": null,
+        "failure": null
+      }
+    }
+  ],
+  "background": {
+    "inpainted_image": {
+      "uri": "background.png",
+      "sha256": null
+    },
+    "asset": {
+      "uri": "scene.glb",
+      "sha256": null
+    },
+    "stale": false
+  }
+}

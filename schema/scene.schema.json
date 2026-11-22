@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AssetRef": {
+      "additionalProperties": false,
       "description": "Reference to a file in asset storage. `sha256` makes assets content-addressed so the\nsame output is never generated twice.",
       "properties": {
         "sha256": {
@@ -19,6 +20,7 @@
       "type": "object"
     },
     "Background": {
+      "additionalProperties": false,
       "properties": {
         "asset": {
           "anyOf": [
@@ -52,6 +54,7 @@
       "type": "object"
     },
     "Camera": {
+      "additionalProperties": false,
       "properties": {
         "intrinsics": {
           "$ref": "#/$defs/Intrinsics"
@@ -68,6 +71,7 @@
       "type": "object"
     },
     "Intrinsics": {
+      "additionalProperties": false,
       "properties": {
         "cx": {
           "description": "Principal point X, in pixels.",
@@ -113,6 +117,7 @@
       "type": "object"
     },
     "Label": {
+      "additionalProperties": false,
       "properties": {
         "confidence": {
           "description": "Model confidence in `[0, 1]`; `None` for labels typed by the user.",
@@ -143,6 +148,7 @@
       "type": "string"
     },
     "ObjectStatus": {
+      "additionalProperties": false,
       "properties": {
         "failure": {
           "description": "Last generation error, if the most recent attempt failed.",
@@ -172,6 +178,7 @@
       "type": "object"
     },
     "SceneObject": {
+      "additionalProperties": false,
       "properties": {
         "asset": {
           "anyOf": [
@@ -273,6 +280,7 @@
       ]
     },
     "Transform": {
+      "additionalProperties": false,
       "description": "Translation, rotation (unit quaternion `[x, y, z, w]`) and non-uniform scale, applied\nin glTF order: scale, then rotate, then translate.",
       "properties": {
         "rotation": {
@@ -312,6 +320,7 @@
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
   "properties": {
     "background": {
       "anyOf": [

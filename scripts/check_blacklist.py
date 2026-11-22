@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Fails if any forbidden third-party package appears in the repository's dependency files.
 
+Usage: check_blacklist.py [ROOT]   (default: the repository root)
+
 The list mirrors the "Yasak" (forbidden) section of LICENSES.md. It catches packages
 that a license scanner may miss, e.g. CUDA extensions cloned by install scripts or
 packages whose PyPI metadata understates their license.
@@ -21,6 +23,7 @@ FORBIDDEN = {
     "mip-splatting": "Inria Gaussian-Splatting License (non-commercial)",
     "pymeshfix": "GPL-3.0",
     "python-igraph": "GPL-2.0",
+    "igraph": "GPL-2.0",
     "plyfile": "GPL-3.0",
     "ultralytics": "AGPL-3.0",
     "imageio-ffmpeg": "bundles a GPL FFmpeg binary",
@@ -30,6 +33,8 @@ FORBIDDEN = {
 # Files that declare or install dependencies.
 DEP_FILES = (
     "requirements*.txt",
+    "requirements/*.txt",
+    "constraints*.txt",
     "pyproject.toml",
     "setup.py",
     "setup.cfg",
@@ -38,6 +43,9 @@ DEP_FILES = (
     "*.sh",
     "package.json",
     "Cargo.toml",
+    "Makefile",
+    "*.yml",
+    "*.yaml",
 )
 
 SKIP_DIRS = {".git", "target", "node_modules", ".venv", "venv"}
@@ -50,8 +58,8 @@ def dependency_files(root: pathlib.Path):
                 yield path
 
 
-def main() -> int:
-    root = pathlib.Path(__file__).resolve().parent.parent
+def main(argv: list[str]) -> int:
+    root = pathlib.Path(argv[1]).resolve() if len(argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
     pattern = re.compile(
         r"(?<![\w-])(" + "|".join(re.escape(n) for n in FORBIDDEN) + r")(?![\w-])",
         re.IGNORECASE,
@@ -75,4 +83,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv))

@@ -14,6 +14,7 @@ use crate::status::ObjectStatus;
 pub const SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Scene {
     pub schema_version: u32,
     /// The uploaded photo.
@@ -48,6 +49,7 @@ impl Scene {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Camera {
     pub intrinsics: Intrinsics,
     /// Camera-to-world transform. Identity for the original camera.
@@ -57,6 +59,7 @@ pub struct Camera {
 /// Translation, rotation (unit quaternion `[x, y, z, w]`) and non-uniform scale, applied
 /// in glTF order: scale, then rotate, then translate.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Transform {
     pub translation: [f32; 3],
     pub rotation: [f32; 4],
@@ -88,12 +91,14 @@ impl Default for Transform {
 /// Reference to a file in asset storage. `sha256` makes assets content-addressed so the
 /// same output is never generated twice.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct AssetRef {
     pub uri: String,
     pub sha256: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Label {
     pub text: String,
     pub source: LabelSource,
@@ -109,6 +114,7 @@ pub enum LabelSource {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct SceneObject {
     pub id: String,
     pub label: Label,
@@ -146,6 +152,7 @@ impl SceneObject {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Background {
     /// Background with objects removed and holes filled.
     pub inpainted_image: Option<AssetRef>,

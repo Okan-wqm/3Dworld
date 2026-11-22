@@ -1,4 +1,7 @@
+import warnings
+
 import numpy as np
+import pytest
 
 from workers.common.depth_ops import fit_background_depth, occluding_fraction
 
@@ -47,9 +50,49 @@ def test_background_fit_rescales_and_joins_without_seam():
     new_z = 1.0 + 0.002 * np.arange(w, dtype=np.float32)[None, :].repeat(h, 0)
     new = points_from_depth(new_z)
 
-    out, scale = fit_background_depth(new, ref, filled)
+    out, scale, fallback = fit_background_depth(new, ref, filled)
+    assert not fallback
     assert 2.4 < scale < 3.0
     # Outside the filled region the photo's geometry is kept exactly.
     assert np.allclose(out[~filled], ref[~filled], equal_nan=True)
     # Inside, depth is close to the surrounding wall: no step at the seam.
     assert np.all(np.abs(out[filled][:, 2] - 3.0) < 0.15)
+
+
+def test_shape_mismatch_is_reported_clearly():
+    with pytest.raises(ValueError, match="dimensions differ"):
+        fit_background_depth(np.zeros((4, 4, 3)), np.zeros((5, 5, 3)), np.zeros((4, 4), bool))
+    with pytest.raises(ValueError, match="dimensions differ"):
+        occluding_fraction(np.zeros((4, 4), bool), np.zeros((5, 5)), gap_px=2, jump=0.03)
+
+
+def test_too_few_reference_pixels_is_a_visible_fallback():
+    h, w = 20, 20
+    new = points_from_depth(np.full((h, w), 2.0, np.float32))
+    ref = new.copy()
+    filled = np.ones((h, w), bool)  # nothing left to compare against
+    with pytest.warns(UserWarning, match="reference pixels"):
+        fit = fit_background_depth(new, ref, filled)
+    assert fit.fallback and fit.scale == 1.0
+
+
+def test_unusual_scale_warns_but_is_applied():
+    h, w = 40, 40
+    ref = points_from_depth(np.full((h, w), 30.0, np.float32))
+    new = points_from_depth(np.full((h, w), 1.0, np.float32))
+    filled = np.zeros((h, w), bool)
+    filled[10:20, 10:20] = True
+    with pytest.warns(UserWarning, match="unusual depth scale"):
+        fit = fit_background_depth(new, ref, filled)
+    assert not fit.fallback and abs(fit.scale - 30.0) < 1e-3
+
+
+def test_normal_fit_does_not_warn():
+    h, w = 40, 40
+    ref = points_from_depth(np.full((h, w), 3.0, np.float32))
+    new = points_from_depth(np.full((h, w), 2.0, np.float32))
+    filled = np.zeros((h, w), bool)
+    filled[10:20, 10:20] = True
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        fit_background_depth(new, ref, filled)

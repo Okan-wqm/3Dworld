@@ -30,6 +30,19 @@ impl PointMap {
     pub fn from_depth(depth: &[f32], intrinsics: &Intrinsics) -> Result<Self, GeomError> {
         let (w, h) = (intrinsics.width, intrinsics.height);
         check_len(w, h, depth.len())?;
+        let k = intrinsics;
+        if !(k.fx.is_finite() && k.fx > 0.0 && k.fy.is_finite() && k.fy > 0.0) {
+            return Err(GeomError::InvalidIntrinsics(format!(
+                "focal lengths must be finite and positive, got fx={} fy={}",
+                k.fx, k.fy
+            )));
+        }
+        if !(k.cx.is_finite() && k.cy.is_finite()) {
+            return Err(GeomError::InvalidIntrinsics(format!(
+                "principal point must be finite, got cx={} cy={}",
+                k.cx, k.cy
+            )));
+        }
         let points = depth
             .iter()
             .enumerate()
@@ -80,6 +93,29 @@ mod tests {
             PointMap::from_depth(&[1.0; 3], &k),
             Err(GeomError::SizeMismatch { .. })
         ));
+    }
+
+    #[test]
+    fn bad_intrinsics_are_rejected() {
+        for (fx, cx) in [
+            (0.0, 1.0),
+            (-1.0, 1.0),
+            (f32::NAN, 1.0),
+            (1.0, f32::INFINITY),
+        ] {
+            let k = Intrinsics {
+                fx,
+                fy: 1.0,
+                cx,
+                cy: 1.0,
+                width: 2,
+                height: 2,
+            };
+            assert!(matches!(
+                PointMap::from_depth(&[1.0; 4], &k),
+                Err(GeomError::InvalidIntrinsics(_))
+            ));
+        }
     }
 
     #[test]

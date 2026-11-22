@@ -8,15 +8,14 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-from huggingface_hub import hf_hub_download
 
-from workers.common.weights import require_allowed
+from workers.common.weights import fetch
 
 MODEL = ("JosephCatrambone/big-lama-torchscript", "lama.pt")
 
 
 def load_lama(device: str = "cpu"):
-    path = hf_hub_download(require_allowed(MODEL[0]), MODEL[1])
+    path = fetch(*MODEL)
     return torch.jit.load(path, map_location=device).eval()
 
 

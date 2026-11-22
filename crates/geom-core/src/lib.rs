@@ -30,6 +30,14 @@ pub enum GeomError {
     ZeroStride,
     #[error("mesh has {0} vertices; GLB indices are limited to u32")]
     TooManyVertices(usize),
+    #[error("invalid camera intrinsics: {0}")]
+    InvalidIntrinsics(String),
+    #[error("invalid option: {0}")]
+    InvalidOption(String),
+    #[error("invalid texture: {0}")]
+    InvalidTexture(String),
+    #[error("GLB would be {0} bytes; the format is limited to 4 GiB")]
+    TooLarge(usize),
 }
 
 pub(crate) fn check_len(width: u32, height: u32, got: usize) -> Result<(), GeomError> {

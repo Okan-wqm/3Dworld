@@ -1,12 +1,20 @@
 # Model weights that workers are allowed to load. One Hugging Face model id per line.
-# Every entry must be marked ✅ in LICENSES.md. Workers refuse any id not listed here.
+# Every entry must be marked ✅ in LICENSES.md (checked by workers/tests/test_licenses.py).
+# Workers refuse any id not listed here. Models in use also need a pinned revision in
+# weights/revisions.txt.
+
+# --- Used now ---
 facebook/sam2.1-hiera-large
+facebook/sam2.1-hiera-small
+Ruicheng/moge-2-vitl
+JosephCatrambone/big-lama-torchscript
+
+# --- Reserved for later phases (license checked, not loaded by any code yet) ---
 IDEA-Research/grounding-dino-base
 google/owlv2-base-patch16-ensemble
 microsoft/Florence-2-large
 Qwen/Qwen2.5-VL-7B-Instruct
 ZhengPeng7/BiRefNet
-Ruicheng/moge-2-vitl
 depth-anything/Depth-Anything-V2-Small
 Qwen/Qwen-Image-Edit-2509
 QuantStack/Qwen-Image-Edit-GGUF
@@ -16,5 +24,3 @@ stabilityai/TripoSR
 Wan-AI/Wan2.1-VACE-1.3B
 Wan-AI/Wan2.1-T2V-1.3B
 alibaba-pai/Wan2.1-Fun-1.3B-Control
-facebook/sam2.1-hiera-small
-JosephCatrambone/big-lama-torchscript

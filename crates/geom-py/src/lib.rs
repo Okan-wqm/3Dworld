@@ -1,11 +1,14 @@
 //! Python bindings for `geom-core`, imported as `geom_core`.
 //!
-//! Arrays are exchanged as NumPy arrays. Heavy work runs with the GIL released so
-//! worker threads are not blocked.
+//! Arrays are exchanged as NumPy arrays. Inputs are read in logical (row-major) order
+//! whatever their memory layout, so Fortran-ordered or strided arrays give the same
+//! result as C-ordered ones. Invalid input raises `ValueError`; Rust code never panics
+//! across this boundary. Heavy work runs with the GIL released so worker threads are
+//! not blocked.
 
 use geom_core::{GridMeshOptions, Mesh, PointMap, Texture};
 use glam::Vec3;
-use numpy::ndarray::Array2;
+use numpy::ndarray::{Array2, ArrayView, Dimension};
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -16,9 +19,28 @@ fn value_err(e: impl std::fmt::Display) -> PyErr {
     PyValueError::new_err(e.to_string())
 }
 
-fn to_vec3(flat: &[f32]) -> Vec<Vec3> {
-    let (triples, _) = flat.as_chunks::<3>();
-    triples.iter().map(|&c| Vec3::from_array(c)).collect()
+/// Copies an array in logical (row-major) order, independent of its memory layout.
+fn logical<T: Copy, D: Dimension>(a: ArrayView<'_, T, D>) -> Vec<T> {
+    a.iter().copied().collect()
+}
+
+/// Groups a flat buffer into points. Callers check shapes first, so the length is a
+/// multiple of 3; anything else is reported instead of silently truncated.
+fn to_vec3(flat: &[f32]) -> PyResult<Vec<Vec3>> {
+    let (triples, rest) = flat.as_chunks::<3>();
+    if !rest.is_empty() {
+        return Err(value_err("point buffer length is not a multiple of 3"));
+    }
+    Ok(triples.iter().map(|&c| Vec3::from_array(c)).collect())
+}
+
+fn check_points_n3(shape: &[usize], what: &str) -> PyResult<()> {
+    if shape.len() != 2 || shape[1] != 3 {
+        return Err(value_err(format!(
+            "{what} must have shape (N, 3), got {shape:?}"
+        )));
+    }
+    Ok(())
 }
 
 fn vec3_array<'py>(py: Python<'py>, v: &[Vec3]) -> Bound<'py, PyArray2<f32>> {
@@ -107,31 +129,31 @@ fn grid_mesh(
 ) -> PyResult<PyMesh> {
     let shape = points.shape();
     if shape[2] != 3 {
-        return Err(value_err("points must have shape (H, W, 3)"));
+        return Err(value_err(format!(
+            "points must have shape (H, W, 3), got {shape:?}"
+        )));
     }
     let (h, w) = (shape[0] as u32, shape[1] as u32);
-    let flat = points
-        .as_slice()
-        .map_err(|_| value_err("points must be C-contiguous"))?;
-    let mask_slice = match &mask {
+    let pts = to_vec3(&logical(points.as_array()))?;
+    let mask_vec = match &mask {
         Some(m) => {
             if m.shape() != [h as usize, w as usize] {
-                return Err(value_err("mask must have shape (H, W)"));
+                return Err(value_err(format!(
+                    "mask must have shape ({h}, {w}), got {:?}",
+                    m.shape()
+                )));
             }
-            Some(
-                m.as_slice()
-                    .map_err(|_| value_err("mask must be C-contiguous"))?,
-            )
+            Some(logical(m.as_array()))
         }
         None => None,
     };
     let mesh = py
         .detach(|| {
-            let pm = PointMap::new(w, h, to_vec3(flat))?;
+            let pm = PointMap::new(w, h, pts)?;
             geom_core::grid_mesh(
                 &pm,
                 &GridMeshOptions {
-                    mask: mask_slice,
+                    mask: mask_vec.as_deref(),
                     max_depth_ratio,
                     stride,
                 },
@@ -154,9 +176,7 @@ fn points_from_depth<'py>(
 ) -> PyResult<Bound<'py, PyAny>> {
     let shape = depth.shape();
     let (h, w) = (shape[0] as u32, shape[1] as u32);
-    let flat = depth
-        .as_slice()
-        .map_err(|_| value_err("depth must be C-contiguous"))?;
+    let flat = logical(depth.as_array());
     let k = Intrinsics {
         fx,
         fy,
@@ -166,7 +186,7 @@ fn points_from_depth<'py>(
         height: h,
     };
     let pm = py
-        .detach(|| PointMap::from_depth(flat, &k))
+        .detach(|| PointMap::from_depth(&flat, &k))
         .map_err(value_err)?;
     let flat: Vec<f32> = pm.points.iter().flat_map(|p| p.to_array()).collect();
     let arr = numpy::ndarray::Array3::from_shape_vec((h as usize, w as usize, 3), flat)
@@ -182,23 +202,18 @@ fn write_ply_points<'py>(
     points: PyReadonlyArray2<'py, f32>,
     colors: Option<PyReadonlyArray2<'py, u8>>,
 ) -> PyResult<Bound<'py, PyBytes>> {
-    if points.shape()[1] != 3 {
-        return Err(value_err("points must have shape (N, 3)"));
-    }
-    let pts = to_vec3(
-        points
-            .as_slice()
-            .map_err(|_| value_err("points must be C-contiguous"))?,
-    );
+    check_points_n3(points.shape(), "points")?;
+    let pts = to_vec3(&logical(points.as_array()))?;
     let cols: Option<Vec<[u8; 3]>> = match &colors {
         Some(c) => {
             if c.shape() != [pts.len(), 3] {
-                return Err(value_err("colors must have shape (N, 3)"));
+                return Err(value_err(format!(
+                    "colors must have shape ({}, 3), got {:?}",
+                    pts.len(),
+                    c.shape()
+                )));
             }
-            let s = c
-                .as_slice()
-                .map_err(|_| value_err("colors must be C-contiguous"))?;
-            Some(s.as_chunks::<3>().0.to_vec())
+            Some(logical(c.as_array()).as_chunks::<3>().0.to_vec())
         }
         None => None,
     };
@@ -212,11 +227,8 @@ fn opencv_to_gltf<'py>(
     py: Python<'py>,
     points: PyReadonlyArray2<'py, f32>,
 ) -> PyResult<Bound<'py, PyArray2<f32>>> {
-    let pts = to_vec3(
-        points
-            .as_slice()
-            .map_err(|_| value_err("points must be C-contiguous"))?,
-    );
+    check_points_n3(points.shape(), "points")?;
+    let pts = to_vec3(&logical(points.as_array()))?;
     let out: Vec<Vec3> = pts
         .into_iter()
         .map(scene_schema::coords::opencv_to_gltf)
@@ -247,7 +259,9 @@ fn write_glb_scene<'py>(
             }),
         })
         .collect();
-    let glb = geom_core::write_glb_scene(&glb_parts).map_err(value_err)?;
+    let glb = py
+        .detach(|| geom_core::write_glb_scene(&glb_parts))
+        .map_err(value_err)?;
     Ok(PyBytes::new(py, &glb))
 }
 
@@ -255,6 +269,8 @@ fn write_glb_scene<'py>(
 #[pyo3(name = "geom_core")]
 fn geom_core_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMesh>()?;
+    // Single source of the scene.json version for Python (see workers/common/scene_json.py).
+    m.add("SCHEMA_VERSION", scene_schema::SCHEMA_VERSION)?;
     m.add_function(wrap_pyfunction!(write_glb_scene, m)?)?;
     m.add_function(wrap_pyfunction!(grid_mesh, m)?)?;
     m.add_function(wrap_pyfunction!(points_from_depth, m)?)?;

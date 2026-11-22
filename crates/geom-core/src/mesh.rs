@@ -66,6 +66,15 @@ pub fn grid_mesh(pm: &PointMap, opts: &GridMeshOptions) -> Result<Mesh, GeomErro
     if opts.stride == 0 {
         return Err(GeomError::ZeroStride);
     }
+    if !(opts.max_depth_ratio.is_finite() && opts.max_depth_ratio >= 0.0) {
+        return Err(GeomError::InvalidOption(format!(
+            "max_depth_ratio must be finite and >= 0, got {}",
+            opts.max_depth_ratio
+        )));
+    }
+    if pm.width == 0 || pm.height == 0 {
+        return Ok(Mesh::default());
+    }
     if let Some(mask) = opts.mask {
         check_len(pm.width, pm.height, mask.len())?;
     }
@@ -267,6 +276,41 @@ mod tests {
         let m = grid_mesh(&flat(2, 2, 1.0), &GridMeshOptions::default()).unwrap();
         assert!(m.uvs.contains(&Vec2::new(0.25, 0.25)));
         assert!(m.uvs.contains(&Vec2::new(0.75, 0.75)));
+    }
+
+    #[test]
+    fn degenerate_sizes_do_not_panic() {
+        for (w, h, stride) in [
+            (0, 0, 1),
+            (0, 5, 2),
+            (5, 0, 2),
+            (1, 1, 1),
+            (1, 7, 1),
+            (7, 1, 3),
+            (3, 3, 10),
+        ] {
+            let pm = PointMap::new(w, h, vec![Vec3::new(0.0, 0.0, 1.0); (w * h) as usize]).unwrap();
+            let opts = GridMeshOptions {
+                stride,
+                ..Default::default()
+            };
+            let m = grid_mesh(&pm, &opts).unwrap();
+            assert_eq!(m.triangle_count(), 0, "{w}x{h} stride {stride}");
+        }
+    }
+
+    #[test]
+    fn invalid_depth_ratio_is_rejected() {
+        for r in [f32::NAN, -0.1, f32::INFINITY] {
+            let opts = GridMeshOptions {
+                max_depth_ratio: r,
+                ..Default::default()
+            };
+            assert!(matches!(
+                grid_mesh(&flat(2, 2, 1.0), &opts),
+                Err(GeomError::InvalidOption(_))
+            ));
+        }
     }
 
     #[test]
