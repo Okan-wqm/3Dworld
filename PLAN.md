@@ -251,7 +251,7 @@ En önemlisi: **TRELLIS'in kendisi MIT ama resmi kurulumu yasaklı paketler geti
 - **TRELLIS.2:** Üstüne briaai/RMBG-2.0 (CC BY-NC, ticari yasak) ve DINOv3 (Meta özel lisansı) kullanıyor. DINOv3 lisansı okunana kadar ⏳.
 - **Depth Anything V2 Base/Large/Giant:** CC BY-NC. Yalnızca Small.
 - **Hunyuan3D, Stable Fast 3D, FLUX dev, YOLO (AGPL), MinIO (AGPL):** kullanılmaz.
-- **Görünmeyen kaçaklar:** Çalışma anında indirilen ağırlıklar (`from_pretrained`, `torch.hub`) paket lisans kontrolüne görünmez. Bu yüzden ağırlıklar kendi aynamızdan, izin listesiyle sunulur, internetten indirme kapatılır (`HF_HUB_OFFLINE=1`).
+- **Görünmeyen kaçaklar:** Çalışma anında indirilen ağırlıklar (`from_pretrained`, `torch.hub`) paket lisans kontrolüne görünmez. Bu yüzden ağırlıklar tek bir yoldan (`weights.fetch`), izin listesi ve sabit sürümle indirilir; testler kodu, izin listesini ve LICENSES.md'yi karşılaştırır. Kendi ağırlık aynamız ve `HF_HUB_OFFLINE=1` planlı, henüz yok.
 
 ---
 
@@ -268,7 +268,7 @@ En önemlisi: **TRELLIS'in kendisi MIT ama resmi kurulumu yasaklı paketler geti
 | **API + iş akışı** (kuyruk, kredi, canlı ilerleme) | **Rust** (axum + tokio + sqlx) | Faz 0 | Tek binary, düşük gecikme, tip güvenliği |
 | **İş kuyruğu** | **PostgreSQL** (`FOR UPDATE SKIP LOCKED`) | Faz 0 | Rust ve Python ikisi de aynı tabloyu okur; ayrı kuyruk sunucusu gerekmez |
 | **`geom-core`**: derinlik → nokta bulutu → mesh (sıçramalarda kesme), 2.5D katmanlar, mesh sadeleştirme (meshopt), PLY/GLB/OBJ/USDA yazıcıları, splat format dönüşümü | **Rust** | Faz 1 | En büyük CPU kazancı: Python döngülerine göre 10–100×, rayon ile çok çekirdek |
-| `geom-core`'un Python'dan kullanımı | Rust → **PyO3 + maturin + numpy crate** | Faz 1 | Veri kopyalamadan (zero-copy), hesap sırasında GIL bırakılır |
+| `geom-core`'un Python'dan kullanımı | Rust → **PyO3 + maturin + numpy crate** | Faz 1 | Diziler sınırda bir kez kopyalanır (bellek düzeninden bağımsız okuma), hesap sırasında GIL bırakılır |
 | `geom-core`'un tarayıcıdan kullanımı | Rust → **WASM**, önce **tek çekirdekli** | Faz 2 | Tarayıcıda çok çekirdek için nightly Rust ve COOP/COEP başlıkları gerekiyor, bu yüzden önce tek çekirdek. meshopt/xatlas (C/C++) yalnızca sunucuda kalır |
 | Hafif modeller (SAM 2 maske çözücü) | İleride Rust/tarayıcıda ONNX | Gerekirse | Önce Python worker; tıklama gecikmesi sorun olursa taşınır |
 | Video kodlama | Rust (rav1e AV1, openh264) | Faz 3 | Wan zaten kare tensörü alır; kodlama yalnızca dışa aktarma ve kapalı API'ler için |
@@ -288,23 +288,30 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
 
 ### 5.3 Repo yapısı
 
+✅ = var, (planlı) = henüz yok.
+
 ```
 3Dworld/
-  Cargo.toml             # Rust workspace
+  Cargo.toml  rust-toolchain.toml  deny.toml  Makefile  pyproject.toml   ✅
   crates/
-    api/                 # Rust: axum API + iş akışı + kredi + Postgres kuyruğu
-    scene-schema/        # Rust serde tipleri → JSON Schema → TS/Pydantic; koordinat dönüşümleri
-    geom-core/           # Rust: geometri çekirdeği (saf Rust, test edilebilir)
-    geom-py/             # Rust → Python (PyO3/maturin)              [Faz 1]
-    geom-wasm/           # Rust → tarayıcı (wasm-bindgen)            [Faz 2]
-    encode/              # Rust: render → AV1/H.264                  [Faz 3]
-  apps/web/              # Next.js + R3F editör
-  workers/               # Python GPU worker'ları
-    gpu_scheduler/       # tek GPU paylaşımı, model yükle/boşalt
-    understand/  segment/  geometry/  complete/  to3d/  align/  video/
-  weights/               # ağırlık izin listesi + ayna betikleri (ağırlıklar git'e girmez)
-  eval/                  # test görselleri + metrik betikleri
-  LICENSE  LICENSES.md  THIRD_PARTY_NOTICES.md  PLAN.md
+    scene-schema/        # ✅ Rust serde tipleri → JSON Schema; koordinat dönüşümleri; durum makinesi
+    geom-core/           # ✅ Rust: geometri çekirdeği (saf Rust, test edilebilir)
+    geom-py/             # ✅ Rust → Python (PyO3/maturin) + geom_core.pyi tip dosyası
+    api/                 # (planlı) Rust: axum API + iş akışı + kredi + Postgres kuyruğu
+    geom-wasm/           # (planlı, Faz 2) Rust → tarayıcı (wasm-bindgen)
+    encode/              # (planlı, Faz 3) Rust: render → AV1/H.264
+  apps/web/              # (planlı) Next.js + R3F editör
+  workers/               # ✅ Python worker'ları
+    common/              # ✅ modelsiz yardımcılar: scene_json, clicks, images, depth_ops, weights
+    geometry/ segment/ complete/ pipeline/   # ✅ MoGe-2, SAM 2.1, LaMa, katmanlı sahne
+    tests/               # ✅ modelsiz testler (CI'da çalışır)
+    gpu_scheduler/       # (planlı) tek GPU paylaşımı, model yükle/boşalt
+  schema/                # ✅ scene.schema.json + Python'un ürettiği örnek (sözleşme)
+  requirements/          # ✅ sabit Python sürümleri
+  scripts/               # ✅ setup_env.sh, check_blacklist.py
+  weights/               # ✅ izin listesi + sabit sürümler (ağırlıklar git'e girmez)
+  eval/                  # (planlı) test görselleri + metrik betikleri
+  LICENSE  LICENSES.md  THIRD_PARTY_NOTICES.md  PLAN.md  README.md  CLAUDE.md
 ```
 
 ### 5.4 Donanım: tek RTX 4000 (varsayım: RTX 4000 Ada, 20 GB)
@@ -333,13 +340,14 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
 
 ### Faz 0: Temel (2–3 hafta)
 - Lisans kapıları:
-  - Paket lisansları: `cargo-deny`, `pip-licenses`, `license-checker`.
-  - Kara liste: nvdiffrast, nvdiffrec, diffoctreerast, diff-gaussian-rasterization, pymeshfix, plyfile, igraph, ultralytics, RMBG.
-  - Ağırlıklar için izin listesi ve kendi aynamız, `HF_HUB_OFFLINE=1`.
-  - Otomatik üretilen `THIRD_PARTY_NOTICES.md`.
-- Rust workspace: `api`, `scene-schema` (koordinat sistemi dahil, §2.1), Postgres kuyruğu, GPU zamanlayıcı iskeleti.
-- Her model, yasaklı paketler **kurulmadan**, ayrı bir ortamda tek tek çalıştırılır: SAM 2.1, MoGe-2, LaMa, TRELLIS v1 (kendi son işleme prototipiyle).
-- **M0 (iç kullanım):** Komut satırından `görsel → maskeler + nokta haritası + bir objenin GLB'si`.
+  - Paket lisansları: `cargo-deny` (✅ yapıldı); `pip-licenses`, `license-checker` (planlı).
+  - Kara liste: nvdiffrast, nvdiffrec, diffoctreerast, diff-gaussian-rasterization, pymeshfix, plyfile, igraph, ultralytics, RMBG (✅ yapıldı).
+  - Ağırlıklar için izin listesi ve sabit sürümler (✅ yapıldı); kendi aynamız ve `HF_HUB_OFFLINE=1` (planlı).
+  - Otomatik üretilen `THIRD_PARTY_NOTICES.md` (planlı).
+- Rust workspace: `scene-schema` (koordinat sistemi dahil, §2.1) ✅; `api`, Postgres kuyruğu, GPU zamanlayıcı iskeleti (planlı).
+- Tek komutla tekrarlanabilir ortam (`make setup`), `make ci` = CI, `CLAUDE.md` oturum kuralları ✅.
+- Her model, yasaklı paketler **kurulmadan**, ayrı bir ortamda tek tek çalıştırılır: SAM 2.1, MoGe-2, LaMa ✅; TRELLIS v1 (kendi son işleme prototipiyle) GPU'yu bekliyor.
+- **M0 (iç kullanım):** Komut satırından `görsel → maskeler + nokta haritası + GLB` ✅.
 
 ### Faz 1: **M1 "Paralaks Sahne"**, ilk denenebilir ürün (5–7 hafta)
 - Ekran 1–3: yükle → objelere tıklayarak seç (parça/bütün, artı/eksi tıklama) → etiketleri düzelt → tamamlamaları ve arka planı onayla/yeniden üret.

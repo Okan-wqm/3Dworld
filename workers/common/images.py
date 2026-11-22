@@ -20,11 +20,13 @@ def load_image(path: str | pathlib.Path, max_side: int) -> np.ndarray:
     - Palette, grayscale and RGBA images are converted to RGB.
     - Images smaller than `MIN_SIDE` pixels on a side are rejected with `ValueError`.
     """
-    with Image.open(path) as img:
-        img = ImageOps.exif_transpose(img).convert("RGB")
+    with Image.open(path) as raw:
+        img = ImageOps.exif_transpose(raw).convert("RGB")
     img.thumbnail((max_side, max_side))
     if min(img.size) < MIN_SIDE:
-        raise ValueError(f"{path}: image is {img.size[0]}x{img.size[1]}; need at least {MIN_SIDE} px per side")
+        raise ValueError(
+            f"{path}: image is {img.size[0]}x{img.size[1]}; need at least {MIN_SIDE} px per side"
+        )
     return np.asarray(img).copy()
 
 

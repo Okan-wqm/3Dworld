@@ -81,6 +81,12 @@
 | NumPy, SciPy | Sayısal işlemler | BSD-3-Clause |
 | huggingface_hub | Ağırlık indirme (ayna üzerinden) | Apache-2.0 |
 | hydra-core, omegaconf, iopath | SAM 2 bağımlılıkları | MIT / BSD-3-Clause / MIT |
+| jsonschema (+ referencing, rpds-py, attrs) | Şema sözleşme testleri | MIT |
+| pytest | Testler | MIT |
+| ruff | Python lint/format | MIT |
+| mypy (+ mypy_extensions, librt) | Python tip kontrolü | MIT |
+| pathspec | mypy bağımlılığı | MPL-2.0 |
+| maturin | Rust → Python derleme | MIT OR Apache-2.0 |
 
 ## ✅ Onaylı Rust crate'leri (crates.io, son sürüm)
 
@@ -153,12 +159,14 @@
 ## Süreç
 
 1. **Yeni bileşen:** Bu dosyaya satır eklenir (lisans, sürüm/commit, kaynak, tarih).
-2. **Paket kontrolü (CI):** Python için `pip-licenses`, npm için `license-checker`, Rust için `cargo-deny`. İzinli liste ve istisna listesi dışında bir lisans varsa build kırılır.
-3. **Kara liste (CI):** `nvdiffrast`, `nvdiffrec`, `diffoctreerast`, `diff-gaussian-rasterization`, `pymeshfix`, `python-igraph`, `plyfile`, `ultralytics`, `imageio-ffmpeg`.
+Şu an otomatik çalışanlar (`make licenses` ve CI):
+
+2. **Rust paketleri:** `cargo-deny` (izinli liste `deny.toml`'da, bu dosyayla aynı). İzinli liste dışında bir lisans varsa build kırılır.
+3. **Kara liste:** `scripts/check_blacklist.py`; bağımlılık dosyalarında, betiklerde, Makefile'da ve CI iş akışlarında yasaklı paket adı geçerse build kırılır: `nvdiffrast`, `nvdiffrec`, `diffoctreerast`, `diff-gaussian-rasterization`, `mip-splatting`, `pymeshfix`, `igraph`, `plyfile`, `ultralytics`, `imageio-ffmpeg`, RMBG.
 4. **Ağırlıklar:** Paket kontrolüne görünmezler, bu yüzden ayrıca yönetilir:
-   - `weights/allowlist` dosyasında izinli model kimlikleri tutulur.
-   - Ağırlıklar kendi aynamızdan sunulur, internetten indirme kapalıdır (`HF_HUB_OFFLINE=1`).
-   - `torch.hub` ile indirme kapatılır.
-   - Listede olmayan bir kimlik yüklenmeye çalışılırsa hata verilir.
-5. **Bildirimler:** `THIRD_PARTY_NOTICES.md` dosyası `cargo-about` ve `license-checker` ile otomatik üretilir. Web paketine ve Docker imajlarına eklenir (MIT ve Apache-2.0 bildirimlerini korumak zorunlu, NOTICE dosyaları dahil).
-6. **Sabitleme:** Docker imajları sabit sürüm/commit ile kurulur. Ağırlıklar lisans dosyalarıyla birlikte saklanır.
+   - Tek indirme yolu `workers.common.weights.fetch()`. Yalnızca `weights/allowlist.txt`'deki kimlikleri yükler, `weights/revisions.txt`'de sabitlenen sürümü indirir.
+   - `workers/tests/test_licenses.py`: izin listesindeki her model burada ✅ olmalı, koddaki her model kimliği izin listesinde ve sürümü sabitlenmiş olmalı.
+   - `HF_HUB_OFFLINE` varsayılan olarak açık **değil**: henüz ağırlık aynası yok, yeni bir oturum ilk çalıştırmada indirebilmeli. Ağırlıklar önbelleğe alındıktan sonra elle açılabilir.
+5. **Python paketleri:** sürümler `requirements/` altında sabit. Python lisans taraması (`pip-licenses`) henüz otomatik değil; yeni paket bu dosyaya elle işlenir.
+
+Planlanan (henüz yok): npm için `license-checker` (web editörü gelince), `THIRD_PARTY_NOTICES.md`'nin `cargo-about` ile otomatik üretimi, kendi ağırlık aynamız, sabit sürümlü Docker imajları.

@@ -10,4 +10,9 @@ node_modules/
 /out/
 *.glb
 *.ply
-!/eval/fixtures/**
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+/.deps/
+/.venv/

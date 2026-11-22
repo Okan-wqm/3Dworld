@@ -93,6 +93,6 @@ def test_bad_inputs_raise_value_error():
         lambda: geom_core.grid_mesh(pts).to_glb(b"not a png", "image/png"),
         lambda: geom_core.write_glb_scene([("x", geom_core.grid_mesh(pts), b"\xff\xd8\xff", "image/png")]),
     ]
-    for i, case in enumerate(cases):
+    for case in cases:
         with pytest.raises(ValueError):
             case()

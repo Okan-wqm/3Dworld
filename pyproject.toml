@@ -1,0 +1,43 @@
+# Python side of 3Dworld: the GPU/CPU workers (`workers/`).
+# Exact, reproducible versions live in requirements/*.txt and are installed by
+# `scripts/setup_env.sh` (or `make setup`); this file declares what the code imports
+# and configures pytest, ruff and mypy.
+
+[project]
+name = "threedworld-workers"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["numpy", "scipy", "pillow", "geom-core"]
+
+[project.optional-dependencies]
+test = ["pytest", "jsonschema"]
+models = ["torch", "torchvision", "huggingface_hub", "opencv-python-headless", "hydra-core", "iopath"]
+
+[tool.pytest.ini_options]
+testpaths = ["workers/tests", "crates/geom-py/tests"]
+pythonpath = ["."]
+addopts = "-m 'not models'"
+markers = ["models: needs model weights and the model stack (run with: pytest -m models)"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["target", ".deps"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["workers", "geom_core"]
+
+[tool.mypy]
+python_version = "3.12"
+# Model-free modules are type-checked strictly; model wrappers import untyped
+# third-party code (torch hub models, sam2) and are covered by tests instead.
+files = ["workers/common", "workers/pipeline/layers.py"]
+strict = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["scipy", "scipy.*"]
+ignore_missing_imports = true

@@ -33,7 +33,8 @@ wildcards = "deny"
 allow-wildcard-paths = true
 
 [advisories]
-# The advisory database needs network access; CI runs it, local runs may skip it.
+# Checked by the non-blocking `advisories` job in CI (needs the live advisory
+# database); `make licenses` checks only licenses, bans and sources.
 ignore = []
 
 [sources]

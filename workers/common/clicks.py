@@ -43,9 +43,7 @@ def check_bounds(objects: list[list[Click]], width: int, height: int) -> None:
     for i, clicks in enumerate(objects, 1):
         for x, y, _ in clicks:
             if not (0 <= x < width and 0 <= y < height):
-                raise ClickError(
-                    f"object {i}: click ({x:g}, {y:g}) is outside the {width}x{height} image"
-                )
+                raise ClickError(f"object {i}: click ({x:g}, {y:g}) is outside the {width}x{height} image")
 
 
 def object_id(index: int) -> str:

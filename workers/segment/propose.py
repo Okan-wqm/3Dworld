@@ -155,7 +155,7 @@ class ClickSession:
             masks, scores, _ = self._pred.predict(
                 point_coords=coords, point_labels=labels, multimask_output=len(clicks) == 1
             )
-        out = [(m.astype(bool), float(s)) for m, s in zip(masks, scores)]
+        out = [(m.astype(bool), float(s)) for m, s in zip(masks, scores, strict=True)]
         return sorted(out, key=lambda c: c[0].sum())
 
     def select(

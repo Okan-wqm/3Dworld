@@ -54,9 +54,7 @@ def occluding_fraction(mask: np.ndarray, depth: np.ndarray, gap_px: int, jump: f
     return float(np.mean(z_out[ok] > z_in[ok] * (1 + jump)))
 
 
-def fit_background_depth(
-    new_points: np.ndarray, ref_points: np.ndarray, filled: np.ndarray
-) -> BackgroundFit:
+def fit_background_depth(new_points: np.ndarray, ref_points: np.ndarray, filled: np.ndarray) -> BackgroundFit:
     """Brings the re-estimated background geometry into the photo's geometry.
 
     MoGe's metric scale changes when objects are removed (they were scale cues), so the

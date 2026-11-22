@@ -4,51 +4,57 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  rust:
+  # Lint, tests and the cross-language schema contract, through the same Makefile
+  # targets a local or LLM session runs.
+  checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --all --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
-      - name: Single-threaded build (WASM configuration)
-        run: cargo test -p geom-core --no-default-features
-      - name: Scene schema is up to date
-        run: |
-          cargo run -q -p scene-schema --bin export-schema schema/scene.schema.json
-          git diff --exit-code schema/
-
-  python-bindings:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      # rustup (preinstalled) reads version and components from rust-toolchain.toml,
+      # the single source of the toolchain for local, LLM and CI runs.
+      - run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: python -m venv .venv
-      - name: Build and test geom_core
-        run: |
-          . .venv/bin/activate
-          pip install maturin numpy scipy pytest
-          (cd crates/geom-py && maturin develop --release)
-          pytest -q crates/geom-py/tests workers/tests
+          python-version: "3.13"
+      - name: Set up the pinned Python environment
+        run: scripts/setup_env.sh
+      - run: make lint
+      - run: make test
+      - run: make schema
 
   licenses:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny
+      - run: python3 -m venv .venv
+      - run: make licenses
+
+  # Security advisories need a live database and can change without any code change,
+  # so they are reported but do not block.
+  advisories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
-          command: check licenses bans sources
-      - name: Forbidden packages (LICENSES.md blacklist)
-        run: python3 scripts/check_blacklist.py
+          command: check advisories

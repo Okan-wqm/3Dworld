@@ -59,7 +59,9 @@ def dependency_files(root: pathlib.Path):
 
 
 def main(argv: list[str]) -> int:
-    root = pathlib.Path(argv[1]).resolve() if len(argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
+    root = (
+        pathlib.Path(argv[1]).resolve() if len(argv) > 1 else pathlib.Path(__file__).resolve().parent.parent
+    )
     pattern = re.compile(
         r"(?<![\w-])(" + "|".join(re.escape(n) for n in FORBIDDEN) + r")(?![\w-])",
         re.IGNORECASE,

@@ -82,7 +82,9 @@ def select_by_clicks(session: ClickSession, objects: list[list[Click]]) -> list[
         taken |= mask
         oid = object_id(index)
         if mask.sum() < MIN_OBJECT_PIXELS:
-            warnings.warn(f"{oid}: only {int(mask.sum())} pixels left (already selected?); dropped", stacklevel=2)
+            warnings.warn(
+                f"{oid}: only {int(mask.sum())} pixels left (already selected?); dropped", stacklevel=2
+            )
             continue
         layers.append(Layer(oid, mask, score))
     return layers

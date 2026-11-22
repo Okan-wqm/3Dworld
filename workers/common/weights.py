@@ -52,7 +52,5 @@ def fetch(model_id: str, filename: str) -> str:
     require_allowed(model_id)
     revision = pinned_revisions().get(model_id)
     if revision is None:
-        raise ForbiddenWeightsError(
-            f"'{model_id}' has no pinned revision in weights/revisions.txt."
-        )
+        raise ForbiddenWeightsError(f"'{model_id}' has no pinned revision in weights/revisions.txt.")
     return hf_hub_download(model_id, filename, revision=revision)

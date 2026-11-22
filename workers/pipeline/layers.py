@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import pathlib
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -41,8 +42,8 @@ class Layer:
 @dataclass
 class LayeredScene:
     glb: bytes
-    scene: dict  # scene.json content
-    intrinsics: dict  # pixel intrinsics of the original camera
+    scene: dict[str, Any]  # scene.json content
+    intrinsics: dict[str, Any]  # pixel intrinsics of the original camera
     overlay: np.ndarray  # RGB preview of the selected masks
 
 
@@ -54,7 +55,8 @@ def fill_mask(layers: list[Layer], shape: tuple[int, int]) -> np.ndarray:
         union |= layer.mask
     if not union.any():
         return union
-    return ndimage.binary_dilation(union, iterations=max(4, int(0.012 * max(shape))))
+    dilated: np.ndarray = ndimage.binary_dilation(union, iterations=max(4, int(0.012 * max(shape))))
+    return dilated
 
 
 def overlay(image: np.ndarray, masks: list[np.ndarray]) -> np.ndarray:

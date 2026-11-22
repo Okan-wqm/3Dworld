@@ -1,0 +1,11 @@
+# Model-free Python stack: everything CI needs to build the bindings, lint and run the
+# tests. Exact versions; transitive pins are in constraints.txt.
+# Licenses: see LICENSES.md (all MIT / BSD / Apache-2.0 / HPND / MPL-2.0).
+numpy==2.5.4
+scipy==1.18.1
+pillow==13.0.0
+maturin==1.16.0
+pytest==9.2.0
+jsonschema==4.26.0
+ruff==0.17.6
+mypy==2.4.1
