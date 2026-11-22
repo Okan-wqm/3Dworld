@@ -89,18 +89,24 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 
 ### 1.1 İnsan onaylı akış (human-in-the-loop)
 
-Makine önerir, insan kontrol eder: veri etiketlemedeki "insan doğrulaması" mantığı. Her ekranda aynı üç düğme var: **Onayla / Düzelt / Yeniden üret**. Sonraki adım ancak önceki onaylanınca başlar; böylece hata 3D'ye taşınmaz ve GPU boşa harcanmaz. Yüksek güvenli öneriler için **"Hepsini onayla"** düğmesi var, 15 objeyi tek tek onaylamak zorunda kalınmaz. Her ekrandan bir önceki ekrana iş kaybetmeden dönülür.
+Makine önerir, insan kontrol eder: veri etiketlemedeki "insan doğrulaması" mantığı. Her ekranda aynı üç düğme var: **Onayla / Düzelt / Yeniden üret**. Yüksek güvenli öneriler için **"Hepsini onayla"** düğmesi var. Her ekrandan bir önceki ekrana iş kaybetmeden dönülür.
+
+**İki akış modu:**
+- **Hızlı mod (varsayılan, Evren'deki gibi):** Kullanıcı objelere tıklar. Sistem onaylanan obje listesi için tamamlamayı ve 3D'yi **hemen** üretir ve sonucu gösterir. Kullanıcı 3D sonuç üzerinde onaylar, düzeltir ya da yeniden ürettirir. Kredi onayı tek seferde, 3D'ye geçmeden önce alınır.
+- **Adım adım mod:** Pahalı ya da kritik objeler için her ara adım (maske → tamamlama → 3D) ayrı onaylanır, böylece hata 3D'ye taşınmaz.
 
 **İlk kullanım:** Yeni kullanıcı kredi harcamadan önce hazır bir örnek sahneyle (önceden işlenmiş) ürünü dener.
 
-**Ekran 1: Yükleme (Faz 1).** Görsel yüklenir. Kalite kontrolü yapılır (çok küçük, aşırı kırpılmış veya bulanıksa uyarı). Arka planda etiketler, SAM 2.1 maskeleri ve MoGe-2 derinliği hazırlanır.
+**Ekran 1: Yükleme (Faz 1).** Görsel yüklenir. Kalite kontrolü yapılır (çok küçük, aşırı kırpılmış veya bulanıksa uyarı). Arka planda MoGe-2 derinliği hesaplanır ve SAM 2.1'in görsel kodlaması bir kez yapılır (CPU'da ~2 sn), böylece tıklamalar anında yanıt verir.
 
 **Ekran 2: Objeleri seç ve doğrula, "bu bot mu, at mı?" (Faz 1).**
-- Görselin üstünde maskeler (renk + dış çizgi + etiket; renk körlüğüne uygun palet), yanda obje listesi.
-- **Etiket düzelt:** "oyuncak" → "saman". Düzeltilen etiket sonraki adımlara prompt olarak gider.
-- **Eksik obje ekle:** Kaçırılan objeye tıklanır, SAM 2.1 o noktadan maske çıkarır. Faz 1'de Python worker üzerinden (~1 sn). Gecikme sorun olursa maske çözücü sonra tarayıcıya (ONNX) taşınır.
-- **Maske düzelt:** fırça ile ekle/sil, birleştir, böl. **Obje çıkar:** duvar, gökyüzü gibi arka plan parçaları.
-- Hiç obje bulunamazsa ya da model saçmalarsa: elle tıklayarak obje ekleme moduna düşülür.
+- **Ana etkileşim tıklamak:** Kullanıcı objenin üstüne tıklar, maske anında gelir (ölçüm: CPU'da tıklama başına ~30–60 ms). Ekranın tamamı otomatik taranmaz.
+- **Parça / bütün:** Tek tıklama belirsizdir (minder mi, koltuk mu?). SAM üç aday verir; varsayılan "bütün obje", kullanıcı tekerlek veya kısayolla parça ↔ bütün arasında geçer.
+- **Düzeltme tıklamaları:** artı tıklama eksik kalan parçayı ekler, eksi tıklama yanlış dahil edileni çıkarır.
+- Maskeler görselin üstünde renk + dış çizgi + etiketle gösterilir (renk körlüğüne uygun palet), yanda obje listesi.
+- **Etiket:** Görsel-dil modeli tıklanan objeye etiket önerir ("at", "kovboy botu"). Kullanıcı düzeltir; düzeltilen etiket sonraki adımlara prompt olarak gider.
+- **Maske düzelt:** fırça ile ekle/sil, birleştir, böl.
+- **Otomatik öneri (isteğe bağlı):** "Objeleri öner" düğmesi tüm görseli tarar (CPU'da ~40 sn) ve derinlikte öne çıkan objeleri önerir; duvar, zemin ve halı elenir.
 
 **Ekran 3: Tamamlamaları kontrol et, "yarım atı düzgün tamamladı mı?" (Faz 1).**
 - Her obje için bir kart: solda orijinal kesik hali, sağda tamamlanmış hali. Onayla, yeniden üret (2–4 aday yan yana) veya prompt ekle.
@@ -336,7 +342,7 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
 - **M0 (iç kullanım):** Komut satırından `görsel → maskeler + nokta haritası + bir objenin GLB'si`.
 
 ### Faz 1: **M1 "Paralaks Sahne"**, ilk denenebilir ürün (5–7 hafta)
-- Ekran 1–3: yükle → etiketleri gör ve düzelt → tıklayarak eksik obje ekle → tamamlamaları ve arka planı onayla/yeniden üret.
+- Ekran 1–3: yükle → objelere tıklayarak seç (parça/bütün, artı/eksi tıklama) → etiketleri düzelt → tamamlamaları ve arka planı onayla/yeniden üret.
 - `geom-core` (Rust + PyO3): her obje ve arka plan için derinlik mesh katmanları.
 - Tarayıcıda: kamerayı geçerli alan içinde gezdir, gerçek paralaks, boşluklar dolu. Katmanlar düzlemde kaydırılabilir.
 - Dışa aktarma: kısa MP4 + GLB.
@@ -364,6 +370,7 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
 
 ### Faz 5: B2B / robotik / genişleme (pilot müşteriyle)
 - Çoklu görsel/video girişi, PDF kılavuzdan parça listesi.
+- Robot eğitimi için aynı tıkla-etiketle akışı: insan parçaya tıklar ve adlandırır ("pil", "ekran"), sistem 3D'ye çevirir. Etiketli 3D parçalar doğrudan simülasyon ve eğitim verisi olur.
 - Parça etiketleme, MJCF/USD export, sentetik veri (ışık, kamera ve doku varyasyonları + otomatik etiketler).
 - Dışa açık API/SDK (hedef platform seçilerek).
 - İsteğe bağlı: LED ekran / Unreal bağlantısı (Cuebric tarzı).

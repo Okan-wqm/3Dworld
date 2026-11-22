@@ -39,9 +39,9 @@ jobs:
       - name: Build and test geom_core
         run: |
           . .venv/bin/activate
-          pip install maturin numpy pytest
+          pip install maturin numpy scipy pytest
           (cd crates/geom-py && maturin develop --release)
-          pytest -q crates/geom-py/tests
+          pytest -q crates/geom-py/tests workers/tests
 
   licenses:
     runs-on: ubuntu-latest

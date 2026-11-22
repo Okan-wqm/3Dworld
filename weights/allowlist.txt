@@ -16,3 +16,5 @@ stabilityai/TripoSR
 Wan-AI/Wan2.1-VACE-1.3B
 Wan-AI/Wan2.1-T2V-1.3B
 alibaba-pai/Wan2.1-Fun-1.3B-Control
+facebook/sam2.1-hiera-small
+JosephCatrambone/big-lama-torchscript

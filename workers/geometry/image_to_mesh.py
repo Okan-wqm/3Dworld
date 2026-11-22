@@ -12,6 +12,7 @@ Writes to OUT_DIR:
 from __future__ import annotations
 
 import argparse
+import functools
 import io
 import json
 import pathlib
@@ -27,16 +28,22 @@ from workers.common.weights import require_allowed
 MODEL_ID = "Ruicheng/moge-2-vitl"
 
 
-def estimate_geometry(image: np.ndarray, device: str) -> dict:
-    """Runs MoGe-2. Returns OpenCV-convention points (H, W, 3), validity mask (H, W) and
-    normalized intrinsics (3, 3)."""
+@functools.cache
+def _load_moge(device: str):
     from moge.model.v2 import MoGeModel
 
-    model = MoGeModel.from_pretrained(require_allowed(MODEL_ID)).to(device).eval()
+    return MoGeModel.from_pretrained(require_allowed(MODEL_ID)).to(device).eval()
+
+
+def estimate_geometry(image: np.ndarray, device: str, fov_x: float | None = None) -> dict:
+    """Runs MoGe-2. Returns OpenCV-convention points (H, W, 3), validity mask (H, W) and
+    normalized intrinsics (3, 3). Pass `fov_x` (degrees) to reuse a known camera, e.g.
+    when re-estimating an edited version of the same photo."""
+    model = _load_moge(device)
     tensor = torch.from_numpy(image).permute(2, 0, 1).float().div(255).to(device)
     with torch.inference_mode():
         # Half precision only helps (and only works) on GPU.
-        out = model.infer(tensor, use_fp16=device.startswith("cuda"))
+        out = model.infer(tensor, fov_x=fov_x, use_fp16=device.startswith("cuda"))
     return {k: v.cpu().numpy() for k, v in out.items() if isinstance(v, torch.Tensor)}
 
 

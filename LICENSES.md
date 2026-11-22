@@ -7,6 +7,7 @@
 - **İzinli lisanslar:** MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, HPND, MPL-2.0 (dosya bazlı copyleft; değiştirilen MPL dosyaları MPL olarak kalır ve açılır).
 - **İstisna listesi** (adıyla onaylananlar, başkası değil):
   - `easydict`: LGPL-3.0, TRELLIS kullanıyor. Değiştirilmeden, ayrı paket olarak import edilir.
+  - `opencv-python-headless`: Apache-2.0, ama tekerleği FFmpeg'in LGPL derlemesini ayrı `.so` dosyaları olarak içeriyor (libavcodec vb.). MoGe import ediyor. Değiştirilmeden, dinamik bağlı kullanılır.
   - `ffmpeg-next`: WTFPL. Yalnızca FFmpeg'in LGPL derlemesiyle kullanılabilir, varsayılan olarak kullanılmıyor.
 - **Yasak:**
   - Ticari kullanımı yasaklayan (NC) ve "yalnızca araştırma" lisansları.
@@ -42,6 +43,8 @@
 | `QuantStack/Qwen-Image-Edit-GGUF` | 4-bit sürüm (20 GB GPU için) | Apache-2.0 | |
 | `lightx2v/Qwen-Image-Lightning` | 4–8 adımda hızlı üretim | Apache-2.0 | |
 | LaMa (`advimman/lama`) | Hızlı arka plan doldurma | Apache-2.0 | |
+| `JosephCatrambone/big-lama-torchscript` | LaMa'nın TorchScript dönüşümü (yalnızca PyTorch gerektirir) | Apache-2.0 | Üçüncü taraf dönüşümü; kaynak advimman/lama |
+| `facebook/sam2.1-hiera-small` | Segmentasyon (CPU'da hızlı) | Apache-2.0 | |
 | `microsoft/TRELLIS-image-large` (v1) | Obje → 3D | MIT (model + kod) | ⚠️ Kurulum bağımlılıkları aşağıda yasaklı. Girdi **RGBA** verilir, rembg devreye girmez |
 | `stabilityai/TripoSR` | Hızlı obje → 3D (yedek) | MIT | Stability'nin diğer 3D modelleri (SF3D, SPAR3D) yasaklı |
 | `Wan-AI/Wan2.1-VACE-1.3B`, `Wan-AI/Wan2.1-VACE-14B` | Kontrollü video | Apache-2.0 | 14B, 20 GB'a sığmaz. HF kartında "zararlı içerik paylaşma" kullanım maddesi var, engelleyici değil |
@@ -75,6 +78,9 @@
 | PostgreSQL | Veritabanı + iş kuyruğu | PostgreSQL License (BSD benzeri) |
 | SeaweedFS | S3 uyumlu depolama (opsiyonel) | Apache-2.0 |
 | Pillow | Görsel G/Ç | HPND (MIT-CMU) |
+| NumPy, SciPy | Sayısal işlemler | BSD-3-Clause |
+| huggingface_hub | Ağırlık indirme (ayna üzerinden) | Apache-2.0 |
+| hydra-core, omegaconf, iopath | SAM 2 bağımlılıkları | MIT / BSD-3-Clause / MIT |
 
 ## ✅ Onaylı Rust crate'leri (crates.io, son sürüm)
 

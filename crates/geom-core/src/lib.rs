@@ -12,7 +12,7 @@ pub mod mesh;
 pub mod ply;
 pub mod pointmap;
 
-pub use glb::{Texture, write_glb};
+pub use glb::{GlbPart, Texture, write_glb, write_glb_scene};
 pub use mesh::{GridMeshOptions, Mesh, grid_mesh};
 pub use ply::write_ply_points;
 pub use pointmap::PointMap;

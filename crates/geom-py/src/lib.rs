@@ -225,10 +225,38 @@ fn opencv_to_gltf<'py>(
     Ok(vec3_array(py, &out))
 }
 
+/// `(name, mesh, texture bytes, mime type)` as passed from Python.
+type PyGlbPart<'py> = (String, PyRef<'py, PyMesh>, Option<Vec<u8>>, String);
+
+/// Writes several named meshes into one GLB.
+///
+/// parts: list of `(name, mesh, texture_bytes_or_None, mime_type)` tuples, e.g.
+///   `[("background", bg_mesh, bg_png, "image/png"), ("obj-1", m1, png, "image/png")]`.
+#[pyfunction]
+fn write_glb_scene<'py>(
+    py: Python<'py>,
+    parts: Vec<PyGlbPart<'py>>,
+) -> PyResult<Bound<'py, PyBytes>> {
+    let glb_parts: Vec<geom_core::GlbPart<'_>> = parts
+        .iter()
+        .map(|(name, mesh, tex, mime)| geom_core::GlbPart {
+            name,
+            mesh: &mesh.inner,
+            texture: tex.as_deref().map(|bytes| Texture {
+                bytes,
+                mime_type: mime,
+            }),
+        })
+        .collect();
+    let glb = geom_core::write_glb_scene(&glb_parts).map_err(value_err)?;
+    Ok(PyBytes::new(py, &glb))
+}
+
 #[pymodule]
 #[pyo3(name = "geom_core")]
 fn geom_core_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMesh>()?;
+    m.add_function(wrap_pyfunction!(write_glb_scene, m)?)?;
     m.add_function(wrap_pyfunction!(grid_mesh, m)?)?;
     m.add_function(wrap_pyfunction!(points_from_depth, m)?)?;
     m.add_function(wrap_pyfunction!(write_ply_points, m)?)?;
