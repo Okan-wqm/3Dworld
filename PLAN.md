@@ -61,7 +61,7 @@ Her model bir **adaptör** arkasında durur (`segment()`, `estimate_geometry()`,
 | 9 | Her objeyi ayrı 3D'ye çevirme | TRELLIS (v1, kendi son işlememizle) | B + A | 2 |
 | 10 | Arka planı 3D'ye çevirme | Faz 1: katmanlı derinlik mesh'i. Faz 2: zemin ve duvarlarla tam sahne | A | 1 → 2 |
 | 11 | Sahneyi bire bir birleştirme, splat gösterimi | Hizalama motoru. Mesh ana format, splat yalnızca önizleme (Spark) | A | 2 |
-| 12 | Üretim süresi (~15 dk) | Yalnızca GPU süresi (kullanıcı inceleme süresi hariç). Tek RTX 4000 ile tutmaz (§5.4) | A | 2 |
+| 12 | Üretim süresi (~15 dk) | Yalnızca GPU süresi (kullanıcı inceleme süresi hariç). Kiralık GPU'nun boyutuna bağlı (§5.4) | A | 2 |
 | 13 | 12 modelli altyapı | Adaptör arayüzü + iş kuyruğu + tek GPU zamanlayıcı | A | 0 |
 | 14 | Ajan mimarisi | Sahne grafiği üzerinde tipli araçlar | A + LLM | 4 |
 | 15 | Video modelleri için yerleşim referansı | Kamera yolu → render pass'leri → video modeli | A | 3 |
@@ -314,23 +314,38 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
   LICENSE  LICENSES.md  THIRD_PARTY_NOTICES.md  PLAN.md  README.md  CLAUDE.md
 ```
 
-### 5.4 Donanım: tek RTX 4000 (varsayım: RTX 4000 Ada, 20 GB)
+### 5.4 Donanım: yerelde 8 GB Quadro + kiralık GPU
 
-> ⚠️ Kartın tam modeli doğrulanmalı: `nvidia-smi --query-gpu=name,memory.total --format=csv`. Quadro RTX 4000 (8 GB, Turing) çıkarsa büyük modellerin çoğu sığmaz. O durumda ağır adımlar için bulut GPU gerekir.
+Karar (2026-11-26): Makinedeki kart **Quadro RTX 4000: 8 GB, Turing mimarisi**. Büyük modeller için orta sınıf GPU'lu bir makine kiralanacak. İki katman:
 
-| Model | 20 GB'da durum |
+**1. Yerel geliştirme GPU'su: Quadro RTX 4000, 8 GB.** Faz 1'deki modellerin hepsi sığar ve işlemciye göre çok daha hızlı çalışır:
+
+| Model | 8 GB'da durum |
 |---|---|
-| SAM 2.1 + Grounding DINO + MoGe-2 + BiRefNet + LaMa | ✅ Toplam ~8 GB, **sürekli bellekte** kalır |
-| Qwen-Image-Edit-2509 (20B + 7B metin kodlayıcı, bf16'da ~57 GB) | ⚠️ 4-bit GGUF + kısmen CPU'ya taşıma + Lightning ile görsel başına ~30–90 sn (ölçülecek) |
-| TRELLIS v1 | ✅ ~16 GB, sınırda. Yüklenirken diğer büyük modeller boşaltılır |
-| TRELLIS.2-4B | ⚠️ Muhtemelen 24 GB+, ayrıca lisans ⏳ |
-| Wan2.1-VACE-1.3B | ✅ 480p, ~81 kare (~5 sn) parçalar. Uzun kamera yolları parçalara bölünür, parçalar arası tutarlılık için son kare sonraki parçaya verilir |
-| Qwen2.5-VL-7B | ⚠️ Yalnızca 8/4-bit. Varsayılan Claude API (GPU harcamaz) |
-| Wan 14B modelleri | ❌ Sığmaz (~80 GB) |
+| MoGe-2 ViT-L (fp16) + SAM 2.1 + LaMa | ✅ Birlikte birkaç GB, aynı anda bellekte kalabilir |
+| Grounding DINO, BiRefNet, Depth Anything V2 Small | ✅ Küçük modeller |
+| Wan2.1-VACE-1.3B (480p) | ⚠️ Sınırda: ~8 GB ister, ancak CPU'ya taşıma ile ve yavaş. Kiralık GPU önerilir |
+| Qwen-Image-Edit, TRELLIS, Wan 14B, Qwen2.5-VL-7B | ❌ Sığmaz, kiralık GPU'da çalışır |
 
-**GPU zamanlayıcı:** Küçük modeller hep yüklü. Büyük modeller (Qwen-Edit, TRELLIS, Wan) tek tek yüklenir. Aynı modeli kullanan işler arka arkaya gruplanır ki yükle/boşalt maliyeti azalsın (NVMe'den yükleme GB başına birkaç saniye).
+Turing notları:
+- bf16 yok, fp16 var. Kodda GPU'da yarım hassasiyet zaten fp16 kullanılıyor (MoGe `use_fp16`).
+- flash-attention 2 Turing'i desteklemiyor; kullanan modeller standart attention'a düşmeli.
+- `scripts/setup_env.sh --gpu` CUDA 12.8 PyTorch kuruyor. Bu derlemenin Turing'i (sm_75) hâlâ desteklediği makinede doğrulanmalı: `python -c "import torch; print(torch.cuda.get_arch_list())"` çıktısında `sm_75` olmalı.
 
-**Süre beklentisi:** Tek kartla 10 objeli bir sahne muhtemelen 30–60 dakika GPU süresi alır. 15 dakika hedefi ancak birden fazla GPU ile tutar. Proje test amaçlı olduğu için geliştirmede sorun değil.
+**2. Kiralık GPU: Faz 2–3'ün ağır modelleri** (TRELLIS, Qwen-Image-Edit, Wan). Asgari özellikler:
+
+| Özellik | Asgari | Neden |
+|---|---|---|
+| GPU belleği | **24 GB** (48 GB daha rahat) | TRELLIS v1 ~16 GB; Qwen-Image-Edit 24 GB'ta 4-bit + kısmen CPU'ya taşıma ile, 48 GB'ta 8-bit; TRELLIS.2 muhtemelen 24 GB+ |
+| GPU mimarisi | Ampere veya daha yeni (ör. A10/A5000/A6000, L4/L40S, RTX 4090/5090) | bf16 ve flash-attention; TRELLIS'in bağımlılıkları bunları bekliyor |
+| Sistem belleği | 64 GB+ | Büyük modellerin bir kısmı CPU belleğine taşınıyor |
+| Disk | 200 GB+ kalıcı | Model ağırlıkları (yüzlerce GB) her seferinde yeniden inmesin |
+
+Kiralama biçimi: kullanım aralıklıyken saatlik (isteğe bağlı) kiralama, ağırlıklar kalıcı bir diskte. Kullanım düzenli hale gelirse aylık sabit sunucu. Kurulum her iki makinede de aynı: `make setup-models GPU=1`.
+
+**GPU zamanlayıcı (kiralık makinede):** Küçük modeller hep yüklü. Büyük modeller (Qwen-Edit, TRELLIS, Wan) tek tek yüklenir. Aynı modeli kullanan işler arka arkaya gruplanır ki yükle/boşalt maliyeti azalsın.
+
+**Süre beklentisi:** 24 GB'lık tek kartla 10 objeli bir sahne muhtemelen 20–40 dakika GPU süresi alır (ölçülecek). 15 dakika hedefi 48 GB'lık ya da birden fazla GPU ile tutar.
 
 ---
 
@@ -410,7 +425,7 @@ Rust ile Python arasındaki veri formatı anlaşması `scene-schema` içinde tek
 - **Kapalı video API'leri** girdi formatlarını değiştirebilir. Ürünün değeri açık modelle kanıtlanabilir olmalı.
 
 **Açık sorular**
-1. RTX 4000'in tam modeli (20 GB Ada mı, 8 GB Turing mi)?
+1. ~~RTX 4000'in modeli~~ → 8 GB Quadro (Turing); ağır modeller için orta sınıf GPU kiralanacak (§5.4). Açık: hangi sağlayıcı ve 24 GB mı, 48 GB mı?
 2. İlk hedef kullanıcı kim: bireysel AI video üreticileri mi, stüdyo ön görselleştirme ekipleri mi? Faz 1–3 önceliklerini bu belirler.
 3. Ekip büyüklüğü?
 4. SAM 3D Objects ve DINOv3 lisansları okunup kabul edilebilir bulunursa hizalama ve TRELLIS.2 planı değişir.
